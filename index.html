@@ -2313,6 +2313,62 @@
         width: 34px
       }
     }
+
+    /* ===== 자주 쓰는 배경 ===== */
+    .bgfav {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+      gap: 5px
+    }
+
+    .favitem {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--line2);
+      border-radius: var(--r);
+      background-size: cover;
+      background-position: center;
+      cursor: pointer
+    }
+
+    .favitem:hover {
+      border-color: var(--ink)
+    }
+
+    .favitem.on {
+      box-shadow: 0 0 0 2px var(--ink);
+      border-color: var(--ink)
+    }
+
+    .favitem .x {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, .88);
+      color: #23262b;
+      font-size: 11px;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transition: opacity .12s
+    }
+
+    .favitem:hover .x,
+    .favitem.on .x {
+      opacity: 1
+    }
+
+    @media (max-width:959px) {
+      .favitem .x {
+        opacity: 1;
+        width: 18px;
+        height: 18px
+      }
+    }
   </style>
 </head>
 
@@ -2602,6 +2658,7 @@
                   <button class="btn sm" data-bgt="img">이미지</button>
                 </div>
                 <div class="seg tight" style="margin-top:6px">
+                  <button class="btn sm" data-bgp="base">기본</button>
                   <button class="btn sm" data-bgp="white">흰</button>
                   <button class="btn sm" data-bgp="paper">종이</button>
                   <button class="btn sm" data-bgp="ink">먹</button>
@@ -2623,6 +2680,13 @@
                 <input type="file" id="bgFile" accept="image/*" hidden>
                 <div class="seg"><button class="btn sm" id="btnBgPick">불러오기</button><button class="btn sm gho"
                     id="btnBgClr">지우기</button></div>
+                <div class="sub" style="margin-top:12px">자주 쓰는 배경</div>
+                <div class="bgfav" id="bgFav"></div>
+                <div class="seg" style="margin-top:7px">
+                  <button class="btn sm" id="btnBgSaveFav">＋ 지금 배경 등록</button>
+                </div>
+                <p class="hint">등록한 배경은 이 브라우저에 남습니다. 칸을 누르면 바로 적용되고,
+                  칸의 <b>×</b>를 누르면 목록에서 지워집니다.</p>
                 <div class="row" style="margin-top:8px"><label>크기</label><input type="range" id="bgSize" min="100"
                     max="300" step="5"><span class="val" id="vBgSize"></span></div>
                 <div class="row"><label>가로</label><input type="range" id="bgX" min="0" max="100" step="1"><span
@@ -2875,7 +2939,12 @@
         notoSerif: '"Noto Serif KR", "Noto Serif CJK KR", "Apple Myungjo", "Nanum Myeongjo", "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "BIZ UDPMincho", "MS PMincho", serif',
         chosunMyungjo: '"Chosunilbo_myungjo", "Chosunilbo Myungjo", "Apple Myungjo", "Nanum Myeongjo", "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "BIZ UDPMincho", "MS PMincho", "Noto Serif JP", serif'
       };
+      /* ─────────────────────────────────────────────
+         배경 프리셋 — 마음에 안 들면 여기 색만 고치면 됩니다.
+           a = 배경색, t = 글자색, s = 보조색(부제 · 구분선)
+         ───────────────────────────────────────────── */
       const BGP = {
+        base: { a: '#FDFDFD', t: '#23262b', s: '#7c828b' },   // ← '기본' 배경색
         white: { a: '#ffffff', t: '#23262b', s: '#7c828b' },
         paper: { a: '#f5f1e8', t: '#2c2a26', s: '#8a8378' },
         ink: { a: '#1e2024', t: '#eae7e1', s: '#9aa0a8' },
@@ -2885,7 +2954,7 @@
         return {
           blocks: [], people: [], activeP: null, zoom: 0, sel: -1, panelW: 360, sheet: 'half',
           canvas: { ratio: 'auto', w: 600, padX: 44, padY: 56, cols: 1, cgap: 56, padLink: false },
-          bg: { preset: 'paper', type: 'solid', a: '#f5f1e8', b: '#e8e2d3', c: '#d9d3c4', dir: 180, img: null, imgRaw: null, iw: 0, ih: 0, size: 100, x: 50, y: 50, blur: 0, ovC: '#000000', ovA: 0 },
+          bg: { preset: 'base', type: 'solid', a: '#FDFDFD', b: '#e8e2d3', c: '#d9d3c4', dir: 180, img: null, imgRaw: null, iw: 0, ih: 0, size: 100, x: 50, y: 50, blur: 0, ovC: '#000000', ovA: 0 },
           type: {
             font: 'pretendard', fw: 400, ta: 'left', wrap: 'word', fs: 13, ls: 0, lh: 1.85, para: 13, sx: 100,
             tsz: 26, tgap: 14, ssz: 13, sgap: 18
@@ -2895,12 +2964,13 @@
             avsh: 'circle', av: 34, bsz: 13, blh: 1.55, bpv: 9, bph: 14, brad: 15, bmax: 78, gap: 9, nsz: 10.5, shadow: false
           },
           color: {
-            text: '#2c2a26', sub: '#8a8378', lineA: '#c9b98a', lineB: '#b6b1a6',
+            text: '#23262b', sub: '#7c828b', lineA: '#c9b98a', lineB: '#b6b1a6',
             hlA: '#f2e39b', hlB: '#cfe6c8', hlC: '#dcd6f2', qA: '#2f6493', qB: '#54499b', pr: '#8a8378',
             shOn: false, shC: '#000000', shBlur: 3, shY: 1
           },
           smart: { q: true, p: true, strip: true },
           ink: { text: '#b03a2e', hl: '#f2e39b' },
+          bgFav: [],
           out: { scale: 2, fmt: 'png', name: 'excerpt', transparent: false },
           sign: { l: '', r: '', sep: '|', al: 'flex-start', sz: 10, gap: 20, c: '#9a9c9f', pg: false },
           ui: {
@@ -3762,6 +3832,7 @@
       /* ===== 서식바 색 피커 ===== */
       function syncInk() {
         if (!S.ink) S.ink = { text: '#b03a2e', hl: '#f2e39b' };
+        if (!Array.isArray(S.bgFav)) S.bgFav = [];
         const dt = $('#dotText'), dh = $('#dotHlA');
         if (dt) dt.style.background = S.ink.text;
         if (dh) dh.style.background = S.ink.hl;
@@ -4210,6 +4281,46 @@
         $('#rowBgC').style.display = (t === 'g3') ? 'flex' : 'none';
         $('#rowBgDir').style.display = (t === 'g2' || t === 'g3') ? 'flex' : 'none';
       }
+      /* ===== 자주 쓰는 배경 ===== */
+      function renderBgFav() {
+        const h = $('#bgFav'); if (!h) return;
+        const list = S.bgFav || [];
+        h.innerHTML = '';
+        if (!list.length) { h.innerHTML = '<div class="empty" style="border:0;padding:2px 0 6px">아직 등록한 배경이 없습니다.</div>'; return; }
+        list.forEach((f, i) => {
+          const el = document.createElement('div');
+          el.className = 'favitem' + (S.bg.imgRaw === f.img ? ' on' : '');
+          el.style.backgroundImage = 'url("' + f.img + '")';
+          el.title = f.name || ('배경 ' + (i + 1));
+          el.innerHTML = '<button class="x" title="목록에서 지우기">×</button>';
+          el.addEventListener('click', ev => {
+            if (ev.target.classList.contains('x')) {
+              ev.stopPropagation();
+              S.bgFav.splice(i, 1); renderBgFav(); save(); return;
+            }
+            S.bg.imgRaw = f.img; S.bg.iw = f.iw || 0; S.bg.ih = f.ih || 0;
+            S.bg.size = f.size != null ? f.size : 100;
+            S.bg.x = f.x != null ? f.x : 50; S.bg.y = f.y != null ? f.y : 50;
+            S.bg.blur = f.blur || 0;
+            S.bg.type = 'img'; seg('data-bgt', 'img'); syncBgRows();
+            syncAll(); rebuildBg(); renderBgFav();
+            toast('배경을 적용했습니다');
+          });
+          h.appendChild(el);
+        });
+      }
+      $('#btnBgSaveFav').addEventListener('click', () => {
+        if (!S.bg.imgRaw) { toast('먼저 배경 이미지를 불러오세요'); return; }
+        S.bgFav = S.bgFav || [];
+        if (S.bgFav.some(f => f.img === S.bg.imgRaw)) { toast('이미 등록된 배경입니다'); return; }
+        if (S.bgFav.length >= 8) { toast('8개까지 등록할 수 있습니다. 하나를 지운 뒤 다시 시도하세요'); return; }
+        const cur0 = { iw: S.bg.iw, ih: S.bg.ih, size: S.bg.size, x: S.bg.x, y: S.bg.y, blur: S.bg.blur };
+        // 저장 공간을 아끼려고 등록용 사본은 조금 줄인다
+        shrink(S.bg.imgRaw, 1280, u => {
+          S.bgFav.unshift(Object.assign({ img: u, name: '배경 ' + (S.bgFav.length + 1) }, cur0));
+          renderBgFav(); save(); toast('자주 쓰는 배경에 등록했습니다');
+        });
+      });
       $('#btnBgPick').addEventListener('click', () => $('#bgFile').click());
       $('#bgFile').addEventListener('change', e => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
@@ -4504,7 +4615,7 @@
         seg('data-fw', S.type.fw); seg('data-ta', S.type.ta); seg('data-wrap', S.type.wrap);
         seg('data-avsh', S.bub.avsh);
         seg('data-scale', S.out.scale); seg('data-fmt', S.out.fmt); seg('data-sgal', S.sign.al);
-        syncBgRows(); syncEd(); renderPeople();
+        syncBgRows(); syncEd(); renderPeople(); renderBgFav();
         syncInk();
         Object.keys(S.ui.acc).forEach(k => {
           const a = $('.acc[data-acc="' + k + '"]'); if (a) a.classList.toggle('open', !!S.ui.acc[k]);
