@@ -471,9 +471,6 @@
       line-height: 1.7
     }
 
-    .field .hl {
-      padding: .02em .08em
-    }
 
     .fieldbar {
       display: flex;
@@ -1384,7 +1381,7 @@
       transform-origin: left center
     }
 
-    .doc[style*="--ta:center"] .stretch {
+    .doc.ta-center .stretch {
       transform-origin: center
     }
 
@@ -1491,21 +1488,43 @@
     }
 
     /* 인라인 효과 */
-    .doc .hl {
-      border-radius: .14em;
-      padding: .02em .08em
+    /* 형광펜: 배경을 글자 크기에 맞춰 그린다.
+       배경색을 그대로 쓰면 글꼴의 위·아래 여백까지 칠해져 두껍게 보인다.
+       아래 세 값만 고치면 형광펜 두께 · 높이 · 좌우 여백을 조절할 수 있다. */
+    .doc,
+    .field {
+      --hl-h: 1em;
+      /* 형광펜 두께 */
+      --hl-up: .12em;
+      /* 위로 올리는 정도 — 값이 크면 위로, 작으면 아래로 (0.08=아래로 쏠림, 0.16=위로 쏠림) */
+      --hl-x: .1em;
+      /* 좌우 여백 */
     }
 
-    .doc .hl-a {
-      background: var(--hlA)
+    .doc .hl,
+    .field .hl {
+      border-radius: 0;
+      padding: 0 var(--hl-x);
+      background-repeat: no-repeat;
+      background-size: 100% var(--hl-h);
+      background-position: 0 calc(100% - var(--hl-up));
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone
     }
 
-    .doc .hl-b {
-      background: var(--hlB)
+    .doc .hl-a,
+    .field .hl-a {
+      background-image: linear-gradient(var(--hlA, #f2e39b), var(--hlA, #f2e39b))
     }
 
-    .doc .hl-c {
-      background: var(--hlC)
+    .doc .hl-b,
+    .field .hl-b {
+      background-image: linear-gradient(var(--hlB, #cfe6c8), var(--hlB, #cfe6c8))
+    }
+
+    .doc .hl-c,
+    .field .hl-c {
+      background-image: linear-gradient(var(--hlC, #dcd6f2), var(--hlC, #dcd6f2))
     }
 
     .doc .ul-a {
@@ -1532,8 +1551,9 @@
       font-style: inherit
     }
 
-    .doc,
-    .doc * {
+    /* .doc 자신은 --ff를 쓰고, 안쪽 요소만 물려받는다.
+       (.doc 를 여기 함께 넣으면 --ff가 무효가 되어 서체 변경이 먹지 않는다) */
+    .doc *:not(svg):not(path) {
       font-family: inherit
     }
 
@@ -1541,7 +1561,12 @@
       display: none
     }
 
-    .doc.hideq .k-chat .bb i[data-mk] {
+    /* 말풍선 안의 따옴표만 '대사에 따옴표 남기기'로 따로 정한다 */
+    .doc.hidemk .k-chat .bb [data-sm="q"] i[data-mk] {
+      display: inline
+    }
+
+    .doc.hideq .k-chat .bb [data-sm="q"] i[data-mk] {
       display: none
     }
 
@@ -1628,6 +1653,15 @@
       padding: 0 .5em;
       position: relative;
       top: -2px
+    }
+
+    /* 이름을 말풍선 모서리 쪽으로 2px 더 붙인다 */
+    .doc .k-chat.left .nm {
+      padding-left: calc(.5em - 2px)
+    }
+
+    .doc .k-chat.right .nm {
+      padding-right: calc(.5em - 2px)
     }
 
     .doc .k-chat.nonm .nm,
@@ -2094,6 +2128,191 @@
         height: 32px
       }
     }
+
+    /* ===== 정렬 아이콘 버튼 ===== */
+    .seg.tight>.btn svg {
+      display: block;
+      opacity: .85
+    }
+
+    .seg.tight>.btn.on svg {
+      opacity: 1
+    }
+
+    /* 편집란에서도 형광 · 강조선이 보이도록 */
+    .field .ul-a {
+      background: linear-gradient(transparent 58%, var(--lineA, #c9b98a) 58%, var(--lineA, #c9b98a) 96%, transparent 96%)
+    }
+
+    .field .ul-b {
+      background: linear-gradient(transparent 92%, var(--lineB, #b6b1a6) 92%)
+    }
+
+    .field .q-a {
+      color: var(--qA, #2f6493)
+    }
+
+    .field .q-b {
+      color: var(--qB, #54499b)
+    }
+
+    .field .pr {
+      color: var(--prC, #8a8378)
+    }
+
+    /* ===== 서식바: 글자색 · 형광펜 ===== */
+    .inkset {
+      display: inline-flex;
+      align-items: stretch;
+      border: 1px solid var(--line2);
+      border-radius: var(--r);
+      overflow: hidden;
+      background: var(--paper)
+    }
+
+    .inkset .fb.ink {
+      border: 0;
+      border-radius: 0;
+      min-width: 42px;
+      height: 27px;
+      gap: 4px;
+      padding: 0 6px
+    }
+
+    .inkset .fb.ink .ic {
+      font-size: 11px;
+      font-weight: 700
+    }
+
+    .inkset .fb.ink .hlic {
+      font-size: 10px;
+      font-weight: 600
+    }
+
+    .inkset .fb.ink .dot {
+      width: 13px;
+      height: 8px;
+      border-radius: 1px
+    }
+
+    .inkset .pick {
+      position: relative;
+      width: 22px;
+      display: grid;
+      place-items: center;
+      border-left: 1px solid var(--line);
+      cursor: pointer
+    }
+
+    .inkset .pick:hover {
+      background: var(--ink-soft)
+    }
+
+    .inkset .pick input[type=color] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      border: 0;
+      cursor: pointer
+    }
+
+    .inkset .pick .car {
+      width: 0;
+      height: 0;
+      border-left: 3.5px solid transparent;
+      border-right: 3.5px solid transparent;
+      border-top: 4px solid var(--fg3);
+      pointer-events: none
+    }
+
+    /* ===== 크롭 비율 ===== */
+    .croprow {
+      display: flex;
+      gap: 0;
+      margin-bottom: 11px;
+      border: 1px solid var(--line2);
+      border-radius: var(--r);
+      overflow: hidden
+    }
+
+    .croprow>.btn {
+      flex: 1 1 auto;
+      border: 0;
+      border-left: 1px solid var(--line);
+      border-radius: 0;
+      min-height: 30px;
+      font-size: 11px;
+      color: var(--fg2)
+    }
+
+    .croprow>.btn:first-child {
+      border-left: 0
+    }
+
+    .croprow>.btn.on {
+      background: var(--ink);
+      color: #fff
+    }
+
+    .cropwrap {
+      background: #f0efec
+    }
+
+    .cropwrap .mask {
+      border-radius: 0
+    }
+
+    .cropwrap .mask.round {
+      border-radius: 50%
+    }
+
+    input[type=range]:disabled {
+      opacity: .35
+    }
+
+    /* ===== 사진 썸네일 ===== */
+    .imgthumb {
+      margin-top: 9px;
+      width: 100%;
+      height: 84px;
+      border: 1px solid var(--line2);
+      border-radius: var(--r);
+      background-color: var(--tint);
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat
+    }
+
+    .imgthumb.empty::after {
+      content: "고른 사진이 여기 보입니다";
+      display: grid;
+      place-items: center;
+      height: 100%;
+      font-size: 11px;
+      color: var(--fg3)
+    }
+
+    /* ===== 시트 드래그 ===== */
+    @media (max-width:959px) {
+      .panel {
+        transition: height .18s ease
+      }
+
+      .panel.dragging {
+        transition: none
+      }
+
+      .grip {
+        height: 26px
+      }
+
+      .grip::after {
+        top: 10px;
+        width: 34px
+      }
+    }
   </style>
 </head>
 
@@ -2181,10 +2400,9 @@
             </div>
             <div class="row" id="rAlign"><label>정렬</label>
               <div class="seg tight" style="flex:1 1 auto">
-                <button class="btn sm" data-balign="">기본</button>
-                <button class="btn sm" data-balign="left">좌</button>
-                <button class="btn sm" data-balign="center">중</button>
-                <button class="btn sm" data-balign="right">우</button>
+                <button class="btn sm" data-balign="left" title="왼쪽"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="1.00" y="3.5" width="9" height="1.5" rx=".75"/><rect x="1.00" y="7" width="13" height="1.5" rx=".75"/><rect x="1.00" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
+                <button class="btn sm" data-balign="center" title="가운데"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="3.50" y="3.5" width="9" height="1.5" rx=".75"/><rect x="1.50" y="7" width="13" height="1.5" rx=".75"/><rect x="4.50" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
+                <button class="btn sm" data-balign="right" title="오른쪽"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="6.00" y="3.5" width="9" height="1.5" rx=".75"/><rect x="2.00" y="7" width="13" height="1.5" rx=".75"/><rect x="8.00" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
               </div>
             </div>
 
@@ -2205,14 +2423,16 @@
             <div id="gImg" style="display:none">
               <input type="file" id="imgFile" accept="image/*" hidden>
               <div class="seg">
-                <button class="btn sm" id="btnImgPick">이미지 고르기</button>
-                <button class="btn sm gho" id="btnImgCrop">자르기</button>
+                <button class="btn sm" id="btnImgPick">사진 고르기</button>
+                <button class="btn sm gho" id="btnImgCrop">다시 자르기</button>
               </div>
+              <div class="imgthumb empty" id="imgThumb"></div>
               <div class="row" style="margin-top:8px"><label>크기</label><input type="range" id="imgW" min="20" max="100"
                   step="5"><span class="val" id="vImgW"></span></div>
               <div class="row"><label>둥글기</label><input type="range" id="imgRad" min="0" max="40" step="2"><span
                   class="val" id="vImgRad"></span></div>
-              <p class="hint">이미지를 고른 뒤 <b>＋ 추가</b>를 누르면 로그 안에 들어갑니다.</p>
+              <p class="hint">사진을 고르면 자르기 창이 열립니다. <b>기본</b>은 원본 비율 그대로이고,
+                비율을 고르면 드래그로 위치를 맞춰 잘라냅니다. 고른 뒤 <b>＋ 추가</b>를 누르면 로그에 들어갑니다.</p>
             </div>
 
             <div id="gText">
@@ -2222,11 +2442,22 @@
                 <button class="fb" data-cmd="underline" style="text-decoration:underline">U</button>
                 <button class="fb" data-cmd="strikeThrough" style="text-decoration:line-through">S</button>
                 <span class="gap"></span>
-                <button class="fb" data-ink="text" title="글자색"><span class="dot" id="dotText"></span></button>
-                <button class="fb" data-ink="sub" title="보조색"><span class="dot" id="dotSub"></span></button>
-                <button class="fb" data-hl="a" title="형광 A"><span class="dot" id="dotHlA"></span></button>
-                <button class="fb" data-hl="b" title="형광 B"><span class="dot" id="dotHlB"></span></button>
-                <button class="fb" data-hl="c" title="형광 C"><span class="dot" id="dotHlC"></span></button>
+                <span class="inkset">
+                  <button class="fb ink" data-ink="text" title="선택한 글자에 글자색 적용">
+                    <span class="ic">A</span><span class="dot" id="dotText"></span>
+                  </button>
+                  <label class="pick" title="글자색 고르기">
+                    <input type="color" id="pickText"><span class="car"></span>
+                  </label>
+                </span>
+                <span class="inkset">
+                  <button class="fb ink" data-hl="a" title="선택한 글자에 형광펜 적용">
+                    <span class="ic hlic">형광</span><span class="dot" id="dotHlA"></span>
+                  </button>
+                  <label class="pick" title="형광펜 색 고르기">
+                    <input type="color" id="pickHl"><span class="car"></span>
+                  </label>
+                </span>
                 <button class="fb" data-ul="a" title="강조선 A">강A</button>
                 <button class="fb" data-ul="b" title="강조선 B">강B</button>
                 <span class="gap"></span>
@@ -2278,9 +2509,9 @@
             </div>
             <div class="row" style="margin-top:9px"><label>정렬</label>
               <div class="seg tight" style="flex:1 1 auto">
-                <button class="btn sm" data-sgal="flex-start">좌</button>
-                <button class="btn sm" data-sgal="center">중</button>
-                <button class="btn sm" data-sgal="flex-end">우</button>
+                <button class="btn sm" data-sgal="flex-start" title="왼쪽"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="1.00" y="3.5" width="9" height="1.5" rx=".75"/><rect x="1.00" y="7" width="13" height="1.5" rx=".75"/><rect x="1.00" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
+                <button class="btn sm" data-sgal="center" title="가운데"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="3.50" y="3.5" width="9" height="1.5" rx=".75"/><rect x="1.50" y="7" width="13" height="1.5" rx=".75"/><rect x="4.50" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
+                <button class="btn sm" data-sgal="flex-end" title="오른쪽"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="6.00" y="3.5" width="9" height="1.5" rx=".75"/><rect x="2.00" y="7" width="13" height="1.5" rx=".75"/><rect x="8.00" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
               </div>
             </div>
             <div class="row"><label>크기</label><input type="range" id="sgSz" min="7" max="20" step="0.5"><span
@@ -2392,8 +2623,8 @@
                 <input type="file" id="bgFile" accept="image/*" hidden>
                 <div class="seg"><button class="btn sm" id="btnBgPick">불러오기</button><button class="btn sm gho"
                     id="btnBgClr">지우기</button></div>
-                <div class="row" style="margin-top:8px"><label>크기</label><input type="range" id="bgSize" min="60"
-                    max="260" step="5"><span class="val" id="vBgSize"></span></div>
+                <div class="row" style="margin-top:8px"><label>크기</label><input type="range" id="bgSize" min="100"
+                    max="300" step="5"><span class="val" id="vBgSize"></span></div>
                 <div class="row"><label>가로</label><input type="range" id="bgX" min="0" max="100" step="1"><span
                     class="val" id="vBgX"></span></div>
                 <div class="row"><label>세로</label><input type="range" id="bgY" min="0" max="100" step="1"><span
@@ -2425,12 +2656,12 @@
                     <button class="btn sm" data-fw="700">굵게</button>
                   </div>
                 </div>
-                <div class="row"><label>정렬</label>
+                <div class="row"><label>전체 정렬</label>
                   <div class="seg tight" style="flex:1 1 auto">
-                    <button class="btn sm" data-ta="left">좌</button>
-                    <button class="btn sm" data-ta="center">중</button>
-                    <button class="btn sm" data-ta="right">우</button>
-                    <button class="btn sm" data-ta="justify">양쪽</button>
+                    <button class="btn sm" data-ta="left" title="왼쪽"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="1.00" y="3.5" width="9" height="1.5" rx=".75"/><rect x="1.00" y="7" width="13" height="1.5" rx=".75"/><rect x="1.00" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
+                    <button class="btn sm" data-ta="center" title="가운데"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="3.50" y="3.5" width="9" height="1.5" rx=".75"/><rect x="1.50" y="7" width="13" height="1.5" rx=".75"/><rect x="4.50" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
+                    <button class="btn sm" data-ta="right" title="오른쪽"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="6.00" y="3.5" width="9" height="1.5" rx=".75"/><rect x="2.00" y="7" width="13" height="1.5" rx=".75"/><rect x="8.00" y="10.5" width="7" height="1.5" rx=".75"/></g></svg></button>
+                    <button class="btn sm" data-ta="justify" title="양쪽"><svg viewBox="0 0 16 12" width="15" height="11" aria-hidden="true"><g fill="currentColor"><rect x="1.00" y="0" width="14" height="1.5" rx=".75"/><rect x="1.00" y="3.5" width="14" height="1.5" rx=".75"/><rect x="1.00" y="7" width="14" height="1.5" rx=".75"/><rect x="1.00" y="10.5" width="14" height="1.5" rx=".75"/></g></svg></button>
                   </div>
                 </div>
                 <div class="row"><label>줄바꿈</label>
@@ -2465,18 +2696,9 @@
             <div class="acc" data-acc="bubble">
               <button class="h"><span class="ic">▭</span>말풍선</button>
               <div class="b">
-                <div class="sub">테마</div>
-                <div class="seg tight">
-                  <button class="btn sm" data-btheme="basic">기본</button>
-                  <button class="btn sm" data-btheme="tedge">모서리</button>
-                  <button class="btn sm" data-btheme="tcard">카드</button>
-                </div>
-                <div class="row" style="margin-top:8px"><label>테두리</label><input type="color" id="btc"><input
-                    type="range" id="btw" min="0" max="4" step="0.5"><span class="val" id="vBtw"></span></div>
                 <div class="sub">표시</div>
-                <label class="chk"><input type="checkbox" id="bShowAv"> 프사</label>
+                <label class="chk"><input type="checkbox" id="bShowAv"> 프로필 사진</label>
                 <label class="chk"><input type="checkbox" id="bShowNm"> 이름</label>
-                <label class="chk"><input type="checkbox" id="bTail"> 꼬리</label>
                 <label class="chk"><input type="checkbox" id="bGroup"> 연달아 말하면 묶기</label>
                 <label class="chk"><input type="checkbox" id="bQuote"> 대사에 따옴표 남기기</label>
                 <div class="row" style="margin-top:6px"><label>프사 모양</label>
@@ -2485,25 +2707,21 @@
                     <button class="btn sm" data-avsh="sq">라운드</button>
                   </div>
                 </div>
-                <div class="sub">모양</div>
-                <div class="row"><label>프사 크기</label><input type="range" id="avSz" min="14" max="80" step="1"><span
+                <div class="sub">크기</div>
+                <div class="row"><label>프사</label><input type="range" id="avSz" min="14" max="80" step="1"><span
                     class="val" id="vAvSz"></span></div>
-                <div class="row"><label>글자 크기</label><input type="range" id="bsz" min="9" max="34" step="0.5"><span
+                <div class="row"><label>글자</label><input type="range" id="bsz" min="9" max="34" step="0.5"><span
                     class="val" id="vBsz"></span></div>
+                <div class="row"><label>이름</label><input type="range" id="nsz" min="7" max="24" step="0.5"><span
+                    class="val" id="vNsz"></span></div>
                 <div class="row"><label>행간</label><input type="range" id="blh" min="1" max="2.6" step="0.02"><span
                     class="val" id="vBlh"></span></div>
-                <div class="row"><label>안쪽 ↕</label><input type="range" id="bpv" min="0" max="24" step="1"><span
-                    class="val" id="vBpv"></span></div>
-                <div class="row"><label>안쪽 ↔</label><input type="range" id="bph" min="0" max="30" step="1"><span
-                    class="val" id="vBph"></span></div>
                 <div class="row"><label>둥글기</label><input type="range" id="brad" min="0" max="30" step="1"><span
                     class="val" id="vBrad"></span></div>
                 <div class="row"><label>최대 폭</label><input type="range" id="bmax" min="50" max="100" step="2"><span
                     class="val" id="vBmax"></span></div>
-                <div class="row"><label>간격</label><input type="range" id="bgap" min="0" max="40" step="1"><span
+                <div class="row"><label>말풍선 간격</label><input type="range" id="bgap" min="0" max="40" step="1"><span
                     class="val" id="vBgap"></span></div>
-                <div class="row"><label>이름 크기</label><input type="range" id="nsz" min="7" max="24" step="0.5"><span
-                    class="val" id="vNsz"></span></div>
               </div>
             </div>
 
@@ -2516,16 +2734,17 @@
                 <div class="row"><label>보조색</label><input type="color" id="cSub"></div>
                 <div class="row"><label>강조선A</label><input type="color" id="cLineA"></div>
                 <div class="row"><label>강조선B</label><input type="color" id="cLineB"></div>
-                <div class="row"><label>형광 A</label><input type="color" id="cHlA"></div>
-                <div class="row"><label>형광 B</label><input type="color" id="cHlB"></div>
-                <div class="row"><label>형광 C</label><input type="color" id="cHlC"></div>
+                <div class="row"><label>형광 기본색</label><input type="color" id="cHlA"></div>
                 <div class="sub">자동 감지</div>
                 <label class="chk"><input type="checkbox" id="smQ"> 따옴표 <code>"대사"</code></label>
                 <div class="row"><label>따옴표 A</label><input type="color" id="cQA"></div>
                 <div class="row"><label>따옴표 B</label><input type="color" id="cQB"><span class="val">「」</span></div>
                 <label class="chk"><input type="checkbox" id="smP"> 괄호 <code>*지문*</code> <code>( )</code></label>
                 <div class="row"><label>괄호색</label><input type="color" id="cPr"></div>
-                <label class="chk"><input type="checkbox" id="smStrip"> 기호 숨기기 (원문은 보존)</label>
+                <label class="chk"><input type="checkbox" id="smStrip"> 감지한 기호를 결과물에서 숨기기</label>
+                <p class="hint">위 두 항목은 <b>색</b>을, 이 항목은 <b>기호 표시</b>를 정합니다.
+                  둘 다 꺼두면 숨길 기호가 없어 이 항목은 동작하지 않습니다.
+                  말풍선 안 따옴표는 <b>말풍선 → 대사에 따옴표 남기기</b>로 따로 정합니다.</p>
                 <div class="sub">그림자</div>
                 <label class="chk"><input type="checkbox" id="shOn"> 글자 그림자</label>
                 <div class="row"><label>색</label><input type="color" id="shC"></div>
@@ -2564,12 +2783,18 @@
                   <button class="btn sm" id="btnPreLoad">적용</button>
                   <button class="btn sm del" id="btnPreDel">삭제</button>
                 </div>
+                <div class="sub">되돌리기</div>
+                <div class="seg">
+                  <button class="btn sm" id="btnResetStyle">서식 기본값으로</button>
+                </div>
+                <p class="hint">글꼴 · 여백 · 배경 · 말풍선 · 색 설정만 기본값으로 돌립니다.
+                  블록과 인물, 서명 문구는 그대로 남습니다.</p>
                 <div class="sub">백업</div>
                 <input type="file" id="impFile" accept="application/json,.json" hidden>
                 <div class="seg">
                   <button class="btn sm" id="btnExp">JSON 저장</button>
                   <button class="btn sm" id="btnImp">가져오기</button>
-                  <button class="btn sm del" id="btnReset">초기화</button>
+                  <button class="btn sm del" id="btnReset">전체 초기화</button>
                 </div>
                 <p class="hint" id="autoStat">자동 저장됩니다.</p>
               </div>
@@ -2583,12 +2808,21 @@
   <div class="modal" id="cropModal">
     <div class="mbox">
       <h3>이미지 자르기</h3>
-      <p class="d">드래그로 위치, 슬라이더로 크기</p>
+      <p class="d">기본은 원본 그대로. 비율을 고르면 드래그로 위치, 슬라이더로 크기를 맞춥니다.</p>
+      <div class="croprow" id="cropRatios">
+        <button class="btn sm" data-cr="free">기본</button>
+        <button class="btn sm" data-cr="1:1">1:1</button>
+        <button class="btn sm" data-cr="4:3">4:3</button>
+        <button class="btn sm" data-cr="16:9">16:9</button>
+        <button class="btn sm" data-cr="3:2">3:2</button>
+        <button class="btn sm" data-cr="3:4">3:4</button>
+      </div>
       <div class="cropwrap" id="cropWrap">
         <canvas id="cropCv" width="512" height="512"></canvas>
         <div class="mask" id="cropMask"></div>
       </div>
-      <div class="row"><label>크기</label><input type="range" id="cropZoom" min="1" max="4" step="0.02"></div>
+      <div class="row"><label>크기</label><input type="range" id="cropZoom" min="1" max="4" step="0.02"><span
+          class="val" id="vCropZoom"></span></div>
       <div class="seg" style="margin-top:10px">
         <button class="btn pri" id="cropOk">사용</button>
         <button class="btn gho" id="cropNo">취소</button>
@@ -2651,14 +2885,14 @@
         return {
           blocks: [], people: [], activeP: null, zoom: 0, sel: -1, panelW: 360, sheet: 'half',
           canvas: { ratio: 'auto', w: 600, padX: 44, padY: 56, cols: 1, cgap: 56, padLink: false },
-          bg: { type: 'solid', a: '#f5f1e8', b: '#e8e2d3', c: '#d9d3c4', dir: 180, img: null, imgRaw: null, size: 100, x: 50, y: 50, blur: 0, ovC: '#000000', ovA: 0 },
+          bg: { preset: 'paper', type: 'solid', a: '#f5f1e8', b: '#e8e2d3', c: '#d9d3c4', dir: 180, img: null, imgRaw: null, iw: 0, ih: 0, size: 100, x: 50, y: 50, blur: 0, ovC: '#000000', ovA: 0 },
           type: {
             font: 'pretendard', fw: 400, ta: 'left', wrap: 'word', fs: 13, ls: 0, lh: 1.85, para: 13, sx: 100,
             tsz: 26, tgap: 14, ssz: 13, sgap: 18
           },
           bub: {
             theme: 'basic', btc: '#d8d4cc', btw: 1, showAv: true, showNm: true, tail: true, group: true, keepQuote: false,
-            avsh: 'circle', av: 34, bsz: 13, blh: 1.55, bpv: 8, bph: 12, brad: 15, bmax: 78, gap: 9, nsz: 10.5, shadow: false
+            avsh: 'circle', av: 34, bsz: 13, blh: 1.55, bpv: 9, bph: 14, brad: 15, bmax: 78, gap: 9, nsz: 10.5, shadow: false
           },
           color: {
             text: '#2c2a26', sub: '#8a8378', lineA: '#c9b98a', lineB: '#b6b1a6',
@@ -2666,10 +2900,11 @@
             shOn: false, shC: '#000000', shBlur: 3, shY: 1
           },
           smart: { q: true, p: true, strip: true },
+          ink: { text: '#b03a2e', hl: '#f2e39b' },
           out: { scale: 2, fmt: 'png', name: 'excerpt', transparent: false },
-          sign: { l: '', r: '', sep: '|', al: 'center', sz: 10, gap: 20, c: '#9a9c9f', pg: false },
+          sign: { l: '', r: '', sep: '|', al: 'flex-start', sz: 10, gap: 20, c: '#9a9c9f', pg: false },
           ui: {
-            kind: 'text', align: '', tw: '700', dvs: 'solid', dvLen: 100, dvPad: 10, img: null, imgW: 80, imgRad: 8,
+            kind: 'text', align: 'left', tw: '700', dvs: 'solid', dvLen: 100, dvPad: 10, img: null, imgW: 80, imgRad: 8, cropR: 0,
             acc: { people: true, canvas: false, bg: false, type: false, bubble: false, color: false, out: false }
           }
         };
@@ -2687,54 +2922,44 @@
       const card = $('#card'), doc = $('#doc'), stage = $('#stage'), scaler = $('#scaler'), fitbox = $('#fitbox');
       const TAIL = '<svg class="tail" width="8" height="13" viewBox="0 0 8 13" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 0C8 8 5 12 0 13C4 13 8 11 8 6Z"/></svg>';
 
-      /* ===================== 스마트 하이라이트 ===================== */
-      const Q1 = /"([^"\n]*)"|\u201C([^\u201D\n]*)\u201D/g;
-      const Q2 = /\u300C([^\u300D\n]*)\u300D|\u300E([^\u300F\n]*)\u300F/g;
-      const PR = /\*([^*\n]+)\*|\(([^)\n]+)\)|\uFF08([^\uFF09\n]+)\uFF09/g;
-      function smartText(text) {
-        // 순서: 「」 → "" → *지문*/()
-        let parts = [{ t: text, done: false }];
-        const pass = (re, cls, on) => {
-          if (!on) return;
-          const next = [];
-          parts.forEach(p => {
-            if (p.done) { next.push(p); return; }
-            let last = 0, m; re.lastIndex = 0;
-            while ((m = re.exec(p.t))) {
-              if (m.index > last) next.push({ t: p.t.slice(last, m.index), done: false });
-              let inner = null; for (let i = 1; i < m.length; i++) { if (m[i] != null) { inner = m[i]; break; } }
-              const full = m[0], half = (full.length - inner.length) / 2;
-              next.push({ o: full.slice(0, half), t: inner, c: full.slice(full.length - half), done: true, cls: cls });
-              last = m.index + full.length;
-            }
-            if (last < p.t.length) next.push({ t: p.t.slice(last), done: false });
-          });
-          parts = next;
-        };
-        pass(Q2, 'q-b', S.smart.q);
-        pass(Q1, 'q-a', S.smart.q);
-        pass(PR, 'pr', S.smart.p);
-        const mk = s => s ? '<i data-mk="1">' + esc(s) + '</i>' : '';
-        return parts.map(p => p.done
-          ? '<span data-sm="1" class="' + p.cls + '">' + mk(p.o) + esc(p.t) + mk(p.c) + '</span>'
-          : esc(p.t)).join('');
-      }
+      /* ===================== 스마트 하이라이트 ===================== */      /* 블록 전체 글을 기준으로 기호를 찾는다.
+         (예전엔 텍스트 조각마다 찾아서, 문장 안에 굵게·색이 섞이면 감지가 실패했다) */
+      const SMART_PASSES = [
+        { re: /\u300C([^\u300D\n]*)\u300D|\u300E([^\u300F\n]*)\u300F/g, cls: 'q-b', kind: 'q', on: () => S.smart.q },
+        { re: /"([^"\n]*)"|\u201C([^\u201D\n]*)\u201D/g, cls: 'q-a', kind: 'q', on: () => S.smart.q },
+        { re: /\*([^*\n]+)\*|\(([^)\n]+)\)|\uFF08([^\uFF09\n]+)\uFF09/g, cls: 'pr', kind: 'p', on: () => S.smart.p }
+      ];
       function smartHTML(html) {
-        const d = document.createElement('div'); d.innerHTML = unsmart(html);
-        const walk = n => {
-          Array.prototype.slice.call(n.childNodes).forEach(ch => {
-            if (ch.nodeType === 3) {
-              const h = smartText(ch.textContent);
-              if (h !== esc(ch.textContent)) {
-                const t = document.createElement('span'); t.innerHTML = h;
-                while (t.firstChild) n.insertBefore(t.firstChild, ch);
-                ch.remove();
-              }
-            } else if (ch.nodeType === 1 && ch.tagName !== 'SVG' && ch.tagName !== 'svg') walk(ch);
-          });
-        };
-        walk(d);
-        return d.innerHTML;
+        const box = document.createElement('div'); box.innerHTML = unsmart(html);
+        const arr = flattenNode(box);
+        if (!arr.length) return box.innerHTML;
+        const text = arr.map(c => c.ch).join('');
+        let touched = false;
+        SMART_PASSES.forEach(P => {
+          const on = P.on();
+          if (!on && !S.smart.strip) return;
+          P.re.lastIndex = 0;
+          let m;
+          while ((m = P.re.exec(text))) {
+            let inner = null;
+            for (let g = 1; g < m.length; g++) if (m[g] != null) { inner = m[g]; break; }
+            if (inner == null) continue;
+            const a = m.index, len = m[0].length;
+            let busy = false;
+            for (let i = a; i < a + len; i++) if (arr[i] && arr[i].sm) { busy = true; break; }
+            if (busy) continue;
+            const half = (len - inner.length) / 2;
+            for (let i = a; i < a + len; i++) {
+              if (!arr[i]) continue;
+              arr[i].sm = P.kind;
+              arr[i].cls = on ? P.cls : '';
+              if (i < a + half || i >= a + len - half) arr[i].mk = true;
+            }
+            touched = true;
+          }
+        });
+        if (!touched) return box.innerHTML;
+        return buildRich(arr);
       }
       function unsmart(html) {
         const d = document.createElement('div'); d.innerHTML = String(html || '');
@@ -2776,8 +3001,8 @@
         card.style.background = (S.out.transparent && exporting) ? 'transparent' : (bgcss || S.bg.a);
         const bgi = $('#bgi');
         bgi.style.backgroundImage = (S.bg.type === 'img' && S.bg.img) ? 'url("' + S.bg.img + '")' : 'none';
-        bgi.style.backgroundSize = S.bg.size + '%';
         bgi.style.backgroundPosition = S.bg.x + '% ' + S.bg.y + '%';
+        applyBgSize();
         $('#bgo').style.background = S.bg.ovA > 0 ? rgba(S.bg.ovC, S.bg.ovA / 100) : 'transparent';
         const v = {
           '--ff': FONTS[t.font] || FONTS.pretendard, '--tc': col.text, '--sub': col.sub, '--ta': t.ta,
@@ -2795,11 +3020,32 @@
           '--sgsz': S.sign.sz + 'px', '--sgc': S.sign.c, '--sggap': S.sign.gap + 'px', '--sgal': S.sign.al
         };
         Object.keys(v).forEach(k => card.style.setProperty(k, v[k]));
+        const fld = $('#field');
+        if (fld) {
+          fld.style.fontFamily = FONTS[t.font] || FONTS.pretendard;
+          fld.style.setProperty('--hlA', col.hlA); fld.style.setProperty('--hlB', col.hlB);
+          fld.style.setProperty('--hlC', col.hlC);
+          fld.style.setProperty('--lineA', col.lineA); fld.style.setProperty('--lineB', col.lineB);
+          fld.style.setProperty('--qA', col.qA); fld.style.setProperty('--qB', col.qB);
+          fld.style.setProperty('--prC', col.pr);
+        }
         doc.style.wordBreak = t.wrap === 'char' ? 'break-all' : 'keep-all';
         doc.style.overflowWrap = 'break-word';
         doc.classList.toggle('cols', c.cols > 1);
         doc.classList.toggle('hidemk', !!S.smart.strip);
         doc.classList.toggle('hideq', !S.bub.keepQuote);
+      }
+      /* 배경 이미지: 100%면 캔버스를 꽉 채우는 크기(cover)이고 그 이상만 확대된다.
+         항상 캔버스를 덮으므로 가로·세로 이동도 이미지 안쪽으로 제한된다. */
+      function applyBgSize() {
+        const bgi = $('#bgi'); if (!bgi) return;
+        if (!(S.bg.type === 'img' && S.bg.img)) { bgi.style.backgroundSize = 'cover'; return; }
+        const iw = S.bg.iw, ih = S.bg.ih;
+        const z = Math.max(100, S.bg.size || 100) / 100;
+        if (!iw || !ih) { bgi.style.backgroundSize = 'cover'; return; }
+        const cw = S.canvas.w, chh = card.offsetHeight || Math.round(cw * 1.2);
+        const k = Math.max(cw / iw, chh / ih) * z;
+        bgi.style.backgroundSize = Math.ceil(iw * k) + 'px ' + Math.ceil(ih * k) + 'px';
       }
       function render() {
         applyVars();
@@ -2855,7 +3101,8 @@
           d.style.outline = 'none'; d.innerHTML = smartHTML(html) || '<br>';
           if (S.type.sx !== 100) {
             d.style.display = 'inline-block'; d.style.transform = 'scaleX(' + (S.type.sx / 100) + ')';
-            d.style.transformOrigin = (S.type.ta === 'center' ? 'center' : (S.type.ta === 'right' ? 'right' : 'left')) + ' center';
+            const al = b.align || S.type.ta;
+            d.style.transformOrigin = (al === 'center' ? 'center' : (al === 'right' ? 'right' : 'left')) + ' center';
           }
           return d;
         };
@@ -2922,6 +3169,7 @@
         $('#mOut').textContent = Math.round(S.canvas.w * sc) + ' × ' + Math.round(h * sc) + ' px';
         const RT = { '1:1': 1, '4:5': 5 / 4, '3:4': 4 / 3, '16:9': 9 / 16, '9:16': 16 / 9 }[S.canvas.ratio];
         $('#mWarn').textContent = (RT && h > S.canvas.w * RT + 1) ? '· 내용이 길어 세로가 늘어났습니다' : '';
+        applyBgSize();
       }
       window.addEventListener('resize', debounce(fit, 80));
       window.addEventListener('orientationchange', () => setTimeout(fit, 250));
@@ -2990,6 +3238,15 @@
         $('#gImg').style.display = k === 'img' ? 'block' : 'none';
         $('#gText').style.display = (k === 'div' || k === 'img') ? 'none' : 'block';
         seg('data-balign', S.ui.align); seg('data-tw', S.ui.tw); seg('data-dvs', S.ui.dvs);
+        if (k === 'img') {
+          syncImgPreview();
+          const b = S.blocks[cur];
+          if (b && b.kind === 'img') {
+            const w = b.w != null ? b.w : S.ui.imgW, rd = b.rad != null ? b.rad : S.ui.imgRad;
+            $('#imgW').value = w; $('#vImgW').textContent = w + '%';
+            $('#imgRad').value = rd; $('#vImgRad').textContent = rd + 'px';
+          }
+        }
         const b = S.blocks[cur];
         $('#btnAdd').textContent = b ? '＋ 다음 블록' : '＋ 추가';
         $('#btnNew').textContent = b ? '선택 해제' : '비우기';
@@ -3059,61 +3316,258 @@
       });
       /* 서식 */
       try { document.execCommand('styleWithCSS', false, true); } catch (e) { }
-      function withSel(fn) {
-        field.focus();
-        const s = window.getSelection();
-        if (savedR && field.contains(savedR.commonAncestorContainer)) { s.removeAllRanges(); s.addRange(savedR); }
-        if (!s.rangeCount) { toast('입력칸에서 글자를 선택하세요'); return; }
-        fn(s, s.getRangeAt(0));
-        savedR = s.rangeCount ? s.getRangeAt(0).cloneRange() : null;
-        if (cur >= 0) { const b = S.blocks[cur]; b.html = cleanField(); render(); save(); }
+      /* 선택 영역에만 글자색 / 형광펜을 넣는다 */
+
+      /* ===================== 인라인 서식 엔진 =====================
+         입력칸의 내용을 문자 단위로 펼쳐 서식을 다루므로
+         줄바꿈·공백에 색이 남거나 해제가 안 되는 문제가 생기지 않는다. */
+      const TAG_MARK = { B: 'b', STRONG: 'b', I: 'i', EM: 'i', U: 'u', S: 's', STRIKE: 's', DEL: 's' };
+      const CLS_MARK = ['hl-a', 'hl-b', 'hl-c', 'ul-a', 'ul-b', 'q-a', 'q-b', 'pr'];
+      const WS = /[\s\u00a0]/;
+      function flattenField() { return flattenNode(field); }
+      function flattenNode(root) {
+        const out = [];
+        (function walk(n, st) {
+          Array.prototype.forEach.call(n.childNodes, c => {
+            if (c.nodeType === 3) {
+              const t = c.textContent;
+              for (let i = 0; i < t.length; i++) out.push({ ch: t[i], st: st });
+              return;
+            }
+            if (c.nodeType !== 1) return;
+            if (c.tagName === 'BR') { out.push({ ch: '\n', st: {} }); return; }
+            const ns = Object.assign({}, st);
+            const tg = TAG_MARK[c.tagName];
+            if (tg) ns[tg] = 1;
+            if (c.style) {
+              if (c.style.color) ns.color = c.style.color;
+              if (c.style.backgroundColor) ns.bg = c.style.backgroundColor;
+              if (!c.style.backgroundColor && c.style.backgroundImage) {
+                const m = /rgba?\([^)]*\)|#[0-9a-f]{3,8}/i.exec(c.style.backgroundImage);
+                if (m) ns.bg = m[0];
+              }
+            }
+            if (c.classList) CLS_MARK.forEach(k => { if (c.classList.contains(k)) ns[k] = 1; });
+            walk(c, ns);
+          });
+        })(root, {});
+        return out;
       }
-      function cmd(n, v) { withSel(() => { try { document.execCommand('styleWithCSS', false, true); } catch (e) { } try { document.execCommand(n, false, v); } catch (e) { } }); }
-      function wrapInline(cls) {
-        withSel((s, r) => {
-          if (r.collapsed) { toast('먼저 글자를 선택하세요'); return; }
-          let n = r.startContainer, hit = null;
-          while (n && n !== field) { if (n.nodeType === 1 && n.classList && cls.split(' ').every(c => n.classList.contains(c))) { hit = n; break; } n = n.parentNode; }
-          if (hit && hit.textContent === r.toString()) {
-            const p = hit.parentNode; while (hit.firstChild) p.insertBefore(hit.firstChild, hit);
-            hit.remove(); p.normalize(); return;
+      function stKey(st) {
+        const k = [];
+        ['b', 'i', 'u', 's'].forEach(x => { if (st[x]) k.push(x); });
+        CLS_MARK.forEach(x => { if (st[x]) k.push(x); });
+        if (st.color) k.push('c:' + st.color);
+        if (st.bg) k.push('g:' + st.bg);
+        return k.join('|');
+      }
+      function wrapRun(st, inner) {
+        if (!inner) return '';
+        const cls = [];
+        if (st.bg) cls.push('hl');
+        CLS_MARK.forEach(k => { if (st[k]) cls.push(k); });
+        let style = '';
+        if (st.color) style += 'color:' + st.color + ';';
+        if (st.bg) style += 'background-image:linear-gradient(' + st.bg + ',' + st.bg + ');';
+        let h = inner;
+        if (cls.length || style) {
+          h = '<span' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') +
+            (style ? ' style="' + style + '"' : '') + '>' + h + '</span>';
+        }
+        if (st.s) h = '<s>' + h + '</s>';
+        if (st.u) h = '<u>' + h + '</u>';
+        if (st.i) h = '<i>' + h + '</i>';
+        if (st.b) h = '<b>' + h + '</b>';
+        return h;
+      }
+      /* 스마트 감지 표시(sm/mk)까지 포함해 다시 조립한다 */
+      function buildRich(arr) {
+        const key = c => stKey(c.st) + '\u0001' + (c.sm || '') + '\u0001' + (c.cls || '');
+        let html = '', i = 0;
+        while (i < arr.length) {
+          const c = arr[i];
+          if (c.ch === '\n') { html += '<br>'; i++; continue; }
+          const k = key(c);
+          let inner = '', j = i;
+          while (j < arr.length && arr[j].ch !== '\n' && key(arr[j]) === k) {
+            if (arr[j].mk) {
+              let t = '';
+              while (j < arr.length && arr[j].mk && arr[j].ch !== '\n' && key(arr[j]) === k) { t += arr[j].ch; j++; }
+              inner += '<i data-mk="1">' + esc(t) + '</i>';
+            } else {
+              let t = '';
+              while (j < arr.length && !arr[j].mk && arr[j].ch !== '\n' && key(arr[j]) === k) { t += arr[j].ch; j++; }
+              inner += esc(t);
+            }
           }
-          const sp = document.createElement('span'); sp.className = cls;
-          const c = r.extractContents();
-          $$('span.hl,span.ul-a,span.ul-b', c).forEach(x => { const p = x.parentNode; while (x.firstChild) p.insertBefore(x.firstChild, x); x.remove(); });
-          sp.appendChild(c); r.insertNode(sp);
-          const nr = document.createRange(); nr.selectNodeContents(sp); s.removeAllRanges(); s.addRange(nr);
-        });
+          if (c.sm) inner = '<span data-sm="' + c.sm + '"' + (c.cls ? ' class="' + c.cls + '"' : '') + '>' + inner + '</span>';
+          html += wrapRun(c.st, inner);
+          i = j;
+        }
+        return html;
       }
-      function clearInline() {
-        withSel((s, r) => {
-          if (r.collapsed) { toast('먼저 글자를 선택하세요'); return; }
-          const d = document.createElement('div'); d.appendChild(r.extractContents());
-          const tn = document.createTextNode(d.textContent); r.insertNode(tn);
-          const nr = document.createRange(); nr.selectNode(tn); s.removeAllRanges(); s.addRange(nr);
+      function buildField(arr) {
+        let html = '', buf = '', key = null, cst = null;
+        const flush = () => { if (buf) html += wrapRun(cst || {}, esc(buf)); buf = ''; };
+        arr.forEach(c => {
+          if (c.ch === '\n') { flush(); key = null; cst = null; html += '<br>'; return; }
+          const k = stKey(c.st);
+          if (k !== key) { flush(); key = k; cst = c.st; }
+          buf += c.ch;
         });
+        flush();
+        return html || '<br>';
+      }
+      /* 선택 위치를 문자 번호로 바꾸기 */
+      function idxOf(node, off) {
+        let idx = 0, done = false;
+        (function walk(n) {
+          if (done) return;
+          if (n === node && n.nodeType === 3) { idx += off; done = true; return; }
+          if (n.nodeType === 3) { idx += n.textContent.length; return; }
+          if (n.nodeType === 1 && n.tagName === 'BR') {
+            if (n === node) { done = true; return; }
+            idx += 1; return;
+          }
+          const kids = n.childNodes;
+          for (let i = 0; i < kids.length; i++) {
+            if (n === node && i === off) { done = true; return; }
+            walk(kids[i]);
+            if (done) return;
+          }
+          if (n === node) done = true;
+        })(field);
+        return idx;
+      }
+      function selRange() {
+        const s = window.getSelection();
+        let r = null;
+        if (s && s.rangeCount && field.contains(s.anchorNode)) r = s.getRangeAt(0);
+        else if (savedR && field.contains(savedR.commonAncestorContainer)) r = savedR;
+        if (!r) return null;
+        const a = idxOf(r.startContainer, r.startOffset), b = idxOf(r.endContainer, r.endOffset);
+        return { a: Math.min(a, b), b: Math.max(a, b) };
+      }
+      function putSel(a, b) {
+        let pos = 0, sa = null, sb = null;
+        (function walk(n) {
+          Array.prototype.forEach.call(n.childNodes, c => {
+            if (sb) return;
+            if (c.nodeType === 3) {
+              const len = c.textContent.length;
+              if (sa === null && a <= pos + len) sa = [c, Math.max(0, a - pos)];
+              if (sb === null && b <= pos + len) sb = [c, Math.max(0, b - pos)];
+              pos += len; return;
+            }
+            if (c.nodeType === 1 && c.tagName === 'BR') { pos += 1; return; }
+            if (c.nodeType === 1) walk(c);
+          });
+        })(field);
+        if (!sa) return;
+        try {
+          const r = document.createRange();
+          r.setStart(sa[0], sa[1]);
+          if (sb) r.setEnd(sb[0], sb[1]); else r.collapse(true);
+          const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+          savedR = r.cloneRange(); inkKeep = r.cloneRange();
+        } catch (e) { }
+      }
+      /* 선택 구간의 서식을 바꾼다. trim=true면 앞뒤 공백·줄바꿈은 건드리지 않는다 */
+      function editMarks(fn, trim) {
+        if (S.ui.kind === 'div' || S.ui.kind === 'img') return;
+        const sel = selRange();
+        if (!sel || sel.a === sel.b) { toast('먼저 글자를 선택하세요'); return; }
+        const arr = flattenField();
+        let a = clamp(sel.a, 0, arr.length), b = clamp(sel.b, 0, arr.length);
+        if (trim) {
+          while (a < b && (arr[a].ch === '\n' || WS.test(arr[a].ch))) a++;
+          while (b > a && (arr[b - 1].ch === '\n' || WS.test(arr[b - 1].ch))) b--;
+        }
+        if (a >= b) { toast('글자를 선택하세요'); return; }
+        const picked = [];
+        for (let i = a; i < b; i++) if (arr[i].ch !== '\n') picked.push(i);
+        fn(picked.map(i => arr[i].st), st => { }, arr, picked);
+        field.innerHTML = buildField(arr);
+        putSel(sel.a, sel.b);
+        if (cur >= 0) { const bl = S.blocks[cur]; bl.html = cleanField(); render(); save(); }
+      }
+      function toggleMark(key) {
+        editMarks((sts, _x, arr, idxs) => {
+          const all = idxs.length && idxs.every(i => arr[i].st[key]);
+          idxs.forEach(i => {
+            const ns = Object.assign({}, arr[i].st);
+            if (all) delete ns[key]; else ns[key] = 1;
+            arr[i].st = ns;
+          });
+        }, true);
+      }
+      function setInk(kind) {
+        const val = kind === 'hl' ? S.ink.hl : S.ink.text;
+        const prop = kind === 'hl' ? 'bg' : 'color';
+        editMarks((sts, _x, arr, idxs) => {
+          const same = idxs.length && idxs.every(i => sameColor(arr[i].st[prop], val));
+          idxs.forEach(i => {
+            const ns = Object.assign({}, arr[i].st);
+            if (same) { delete ns[prop]; if (kind === 'hl') CLS_MARK.slice(0, 3).forEach(k => delete ns[k]); }
+            else {
+              ns[prop] = val;
+              if (kind === 'hl') CLS_MARK.slice(0, 3).forEach(k => delete ns[k]);
+            }
+            arr[i].st = ns;
+          });
+        }, true);
+      }
+      function setUL(which) {
+        const key = 'ul-' + which;
+        editMarks((sts, _x, arr, idxs) => {
+          const all = idxs.length && idxs.every(i => arr[i].st[key]);
+          idxs.forEach(i => {
+            const ns = Object.assign({}, arr[i].st);
+            if (all) delete ns[key];
+            else { delete ns['ul-a']; delete ns['ul-b']; ns[key] = 1; }
+            arr[i].st = ns;
+          });
+        }, true);
+      }
+      function clearMarks() {
+        editMarks((sts, _x, arr, idxs) => { idxs.forEach(i => { arr[i].st = {}; }); }, false);
+      }
+      function sameColor(x, y) {
+        if (!x || !y) return false;
+        return norm(x) === norm(y);
+      }
+      function norm(c) {
+        c = String(c).trim().toLowerCase();
+        const m = /^#([0-9a-f]{3})$/.exec(c);
+        if (m) return '#' + m[1].split('').map(ch => ch + ch).join('');
+        const r = /^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(c);
+        if (r) return '#' + [r[1], r[2], r[3]].map(v => (+v).toString(16).padStart(2, '0')).join('');
+        return c;
       }
       function insertMark(kind) {
         const wrap = { quote: ['"', '"'], paren: ['(', ')'], star: ['*', '*'] }[kind];
-        withSel((s, r) => {
-          const txt = r.toString();
-          if (txt) {
-            const t = document.createTextNode(wrap[0] + txt + wrap[1]); r.deleteContents(); r.insertNode(t);
-            const nr = document.createRange(); nr.setStart(t, 1); nr.setEnd(t, 1 + txt.length); s.removeAllRanges(); s.addRange(nr);
-          }
-          else { document.execCommand('insertText', false, wrap[0] + wrap[1]); }
-        });
+        const sel = selRange();
+        if (!sel) { toast('입력칸에 커서를 두세요'); return; }
+        const arr = flattenField();
+        const a = clamp(sel.a, 0, arr.length), b = clamp(sel.b, 0, arr.length);
+        const stA = (arr[a] && arr[a].st) || {}, stB = (arr[b - 1] && arr[b - 1].st) || stA;
+        arr.splice(b, 0, { ch: wrap[1], st: stB });
+        arr.splice(a, 0, { ch: wrap[0], st: stA });
+        field.innerHTML = buildField(arr);
+        putSel(a + 1, b + 1);
+        if (cur >= 0) { const bl = S.blocks[cur]; bl.html = cleanField(); render(); save(); }
       }
       $$('#fmtBar .fb').forEach(btn => {
-        btn.addEventListener('pointerdown', e => e.preventDefault());
+        btn.addEventListener('pointerdown', e => { holdSel(); e.preventDefault(); });
         btn.addEventListener('click', () => {
           const d = btn.dataset;
-          if (d.cmd) cmd(d.cmd);
-          else if (d.ink) cmd('foreColor', d.ink === 'sub' ? S.color.sub : S.color.text);
-          else if (d.hl) wrapInline('hl hl-' + d.hl);
-          else if (d.ul) wrapInline('ul-' + d.ul);
+          const M = { bold: 'b', italic: 'i', underline: 'u', strikeThrough: 's' };
+          if (d.cmd) toggleMark(M[d.cmd] || 'b');
+          else if (d.ink) setInk('text');
+          else if (d.hl) setInk('hl');
+          else if (d.ul) setUL(d.ul);
           else if (d.ins) insertMark(d.ins);
-          else if (d.clear) clearInline();
+          else if (d.clear) clearMarks();
         });
       });
       /* 종류 · 정렬 · 굵기 */
@@ -3135,7 +3589,10 @@
           }
           if ((S.ui.kind === 'title' || S.ui.kind === 'sub') && !blk.w) blk.w = S.ui.tw;
           if (S.ui.kind === 'div') { blk.dvs = S.ui.dvs; blk.len = S.ui.dvLen; blk.pad = S.ui.dvPad; }
-          if (S.ui.kind === 'img' && !blk.src) { blk.src = S.ui.img || ''; blk.w = S.ui.imgW; blk.rad = S.ui.imgRad; }
+          if (S.ui.kind === 'img' && !blk.src) {
+            blk.src = S.ui.img || ''; blk.w = S.ui.imgW; blk.rad = S.ui.imgRad;
+            if (!blk.src) setTimeout(() => $('#imgFile').click(), 60);
+          }
           save();
         }
         syncEd(); render();
@@ -3302,6 +3759,40 @@
         unbind(true); render(); save();
         toast(n ? n + '곳에 강조선을 넣었습니다' : '대사를 찾지 못했습니다');
       });
+      /* ===== 서식바 색 피커 ===== */
+      function syncInk() {
+        if (!S.ink) S.ink = { text: '#b03a2e', hl: '#f2e39b' };
+        const dt = $('#dotText'), dh = $('#dotHlA');
+        if (dt) dt.style.background = S.ink.text;
+        if (dh) dh.style.background = S.ink.hl;
+        const pt = $('#pickText'), ph = $('#pickHl');
+        if (pt) pt.value = S.ink.text;
+        if (ph) ph.value = S.ink.hl;
+      }
+      function hasFieldSel() {
+        const sl = window.getSelection();
+        if (savedR && field.contains(savedR.commonAncestorContainer) && String(savedR).length) return true;
+        return !!(sl && sl.rangeCount && field.contains(sl.anchorNode) && String(sl).length);
+      }
+      /* 색을 고르면 선택 영역에만 적용한다. 문서 기본색(색·효과)은 건드리지 않는다. */
+      let inkKeep = null;
+      function holdSel() { inkKeep = savedR ? savedR.cloneRange() : null; }
+      function useHeld() { if (inkKeep) { savedR = inkKeep.cloneRange(); } }
+      ['#pickText', '#pickHl'].forEach(sel => {
+        const el = $(sel);
+        el.addEventListener('pointerdown', holdSel);
+        el.addEventListener('focus', holdSel);
+        el.addEventListener('click', holdSel);
+      });
+      $('#pickText').addEventListener('input', e => {
+        S.ink.text = e.target.value; syncInk(); save();
+        useHeld(); if (hasFieldSel()) setInk('text');
+      });
+      $('#pickHl').addEventListener('input', e => {
+        S.ink.hl = e.target.value; syncInk(); save();
+        useHeld(); if (hasFieldSel()) setInk('hl');
+      });
+
       /* ===================== 시트 크기 · 키보드 ===================== */
       function kbPx() {
         const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kb'));
@@ -3314,33 +3805,52 @@
         if (mode === 'min') { p.classList.add('min'); }
         else if (mode === 'half') { document.documentElement.style.setProperty('--sheetH', '56vh'); }
         else { document.documentElement.style.setProperty('--sheetH', (sheetMax() - 6) + 'px'); }
-        ['min', 'half', 'max'].forEach(m => $('#sz' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('on', m === mode));
+        markSheet(mode);
         fit(); save();
+      }
+      function markSheet(mode) {
+        ['min', 'half', 'max'].forEach(m => {
+          const b = $('#sz' + m.charAt(0).toUpperCase() + m.slice(1));
+          if (b) b.classList.toggle('on', m === mode);
+        });
       }
       $('#szMin').addEventListener('click', () => setSheet('min'));
       $('#szHalf').addEventListener('click', () => setSheet('half'));
       $('#szMax').addEventListener('click', () => setSheet('max'));
       (function () {
-        const g = $('#grip'), p = $('#panel'); let drag = false, sy = 0, h0 = 0, dy = 0;
+        const g = $('#grip'), p = $('#panel');
+        let drag = false, pid = null, sy = 0, h0 = 0, dy = 0, raf = 0, want = 0;
+        const paint = () => {
+          raf = 0;
+          document.documentElement.style.setProperty('--sheetH', want + 'px');
+        };
         g.addEventListener('pointerdown', e => {
-          drag = true; dy = 0; sy = e.clientY; h0 = p.offsetHeight; g.classList.add('on');
-          try { g.setPointerCapture(e.pointerId); } catch (err) { }
+          if (drag) return;
+          drag = true; pid = e.pointerId; dy = 0; sy = e.clientY;
+          h0 = p.offsetHeight; want = h0;
+          p.classList.add('dragging'); p.classList.remove('min'); g.classList.add('on');
+          try { g.setPointerCapture(pid); } catch (err) { }
+          e.preventDefault();
         });
         g.addEventListener('pointermove', e => {
-          if (!drag) return; dy = e.clientY - sy;
-          const h = clamp(h0 - dy, 62, sheetMax() - 6);
-          p.classList.remove('min');
-          document.documentElement.style.setProperty('--sheetH', h + 'px'); fit();
+          if (!drag || e.pointerId !== pid) return;
+          e.preventDefault();
+          dy = e.clientY - sy;
+          want = Math.round(clamp(h0 - dy, 62, sheetMax()));
+          if (!raf) raf = requestAnimationFrame(paint);
         });
-        ['pointerup', 'pointercancel'].forEach(ev => g.addEventListener(ev, () => {
-          if (!drag) return; drag = false; g.classList.remove('on');
-          if (Math.abs(dy) < 6) { setSheet(p.offsetHeight < 100 ? 'half' : 'min'); return; }
-          const h = p.offsetHeight;
-          S.sheet = h >= sheetMax() - 40 ? 'max' : (h < 110 ? 'min' : 'half');
-          ['min', 'half', 'max'].forEach(m => $('#sz' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('on', m === S.sheet));
-          if (S.sheet === 'min') setSheet('min');
-          save();
-        }));
+        const endDrag = e => {
+          if (!drag || (e && e.pointerId !== pid)) return;
+          drag = false; pid = null;
+          if (raf) { cancelAnimationFrame(raf); raf = 0; }
+          p.classList.remove('dragging'); g.classList.remove('on');
+          if (Math.abs(dy) < 6) { setSheet(p.offsetHeight < 110 ? 'half' : 'min'); return; }
+          const max = sheetMax(), h = want;
+          if (h < 130) setSheet('min');
+          else if (h > max - 60) setSheet('max');
+          else { document.documentElement.style.setProperty('--sheetH', h + 'px'); S.sheet = 'half'; markSheet('half'); fit(); save(); }
+        };
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => g.addEventListener(ev, endDrag));
       })();
       if (window.visualViewport) {
         const vv = window.visualViewport;
@@ -3430,69 +3940,143 @@
       $('#btnPAv').addEventListener('click', () => $('#pAvFile').click());
       $('#pAvFile').addEventListener('change', e => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
-        openCrop(f, url => { const p = personOf(pEdit); if (!p) return; p.avatar = url; renderPeople(); render(); save(); }, S.bub.avsh === 'sq');
+        openCrop(f, url => { const p = personOf(pEdit); if (!p) return; p.avatar = url; renderPeople(); render(); save(); },
+          { ratio: 1, lock: true, round: S.bub.avsh !== 'sq', max: 360, fmt: 'png' });
         e.target.value = '';
       });
       $('#btnPAvClr').addEventListener('click', () => { const p = personOf(pEdit); if (!p) return; p.avatar = null; renderPeople(); render(); save(); });
 
       /* ===================== 크롭 ===================== */
-      let crop = { img: null, zoom: 1, x: 0, y: 0, cb: null };
-      function openCrop(file, cb, square) {
-        const fr = new FileReader();
-        fr.onload = () => {
+      const CROP_R = { 'free': 0, '1:1': 1, '4:3': 4 / 3, '16:9': 16 / 9, '3:2': 3 / 2, '3:4': 3 / 4 };
+      let crop = { img: null, zoom: 1, x: 0, y: 0, cb: null, ratio: 1, lock: false };
+      function openCrop(src, cb, opts) {
+        opts = opts || {};
+        const load = url => {
           const im = new Image();
           im.onload = () => {
-            crop = { img: im, zoom: 1, x: 0, y: 0, cb: cb };
-            $('#cropZoom').value = 1; $('#cropMask').className = 'mask' + (square ? ' sq' : '');
-            $('#cropModal').classList.add('on'); drawCrop();
+            crop = {
+              img: im, zoom: 1, x: 0, y: 0, cb: cb,
+              ratio: opts.ratio != null ? opts.ratio : (S.ui.cropR != null ? S.ui.cropR : 1),
+              lock: !!opts.lock,
+              max: opts.max || 1200,
+              fmt: opts.fmt || 'jpeg'
+            };
+            $('#cropZoom').value = 1;
+            $('#cropMask').className = 'mask' + (opts.round ? ' round' : '');
+            $('#cropRatios').style.display = opts.lock ? 'none' : 'flex';
+            seg('data-cr', ratioKey(crop.ratio), $('#cropRatios'));
+            $('#cropModal').classList.add('on');
+            sizeCrop(); drawCrop();
           };
           im.onerror = () => toast('이미지를 읽을 수 없습니다');
-          im.src = fr.result;
+          im.src = url;
         };
-        fr.readAsDataURL(file);
+        if (typeof src === 'string') load(src);
+        else { const fr = new FileReader(); fr.onload = () => load(fr.result); fr.readAsDataURL(src); }
+      }
+      function ratioKey(r) {
+        let hit = 'free';
+        Object.keys(CROP_R).forEach(k => { if (Math.abs(CROP_R[k] - r) < 0.001) hit = k; });
+        return hit;
+      }
+      function sizeCrop() {
+        const cv = $('#cropCv'), im = crop.img; if (!im) return;
+        const W = 900;
+        const r = crop.ratio || (im.width / im.height);
+        cv.width = W; cv.height = Math.round(W / r);
+        $('#cropWrap').style.aspectRatio = r;
+        $('#cropZoom').disabled = !crop.ratio;
+        const cz = $('#vCropZoom');
+        if (cz) cz.textContent = crop.ratio ? '드래그 가능' : '원본 그대로';
       }
       function drawCrop() {
-        const cv = $('#cropCv'), ctx = cv.getContext('2d'), Sz = cv.width, im = crop.img; if (!im) return;
-        ctx.clearRect(0, 0, Sz, Sz); ctx.fillStyle = '#e6e4df'; ctx.fillRect(0, 0, Sz, Sz);
-        const base = Math.max(Sz / im.width, Sz / im.height), sc = base * crop.zoom, w = im.width * sc, h = im.height * sc;
-        const mx = Math.max(0, (w - Sz) / 2), my = Math.max(0, (h - Sz) / 2);
-        crop.x = clamp(crop.x, -mx, mx); crop.y = clamp(crop.y, -my, my);
+        const cv = $('#cropCv'), ctx = cv.getContext && cv.getContext('2d'), im = crop.img;
+        if (!im || !ctx) return;
+        const W = cv.width, H = cv.height;
+        ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#f0efec'; ctx.fillRect(0, 0, W, H);
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(im, (Sz - w) / 2 + crop.x, (Sz - h) / 2 + crop.y, w, h);
+        if (!crop.ratio) {           // 자유 = 원본 비율 그대로
+          ctx.drawImage(im, 0, 0, W, H); return;
+        }
+        const base = Math.max(W / im.width, H / im.height), sc = base * crop.zoom;
+        const w = im.width * sc, h = im.height * sc;
+        const mx = Math.max(0, (w - W) / 2), my = Math.max(0, (h - H) / 2);
+        crop.x = clamp(crop.x, -mx, mx); crop.y = clamp(crop.y, -my, my);
+        ctx.drawImage(im, (W - w) / 2 + crop.x, (H - h) / 2 + crop.y, w, h);
       }
+      $$('#cropRatios [data-cr]').forEach(b => b.addEventListener('click', () => {
+        crop.ratio = CROP_R[b.dataset.cr]; S.ui.cropR = crop.ratio;
+        crop.zoom = 1; crop.x = 0; crop.y = 0; $('#cropZoom').value = 1;
+        seg('data-cr', b.dataset.cr, $('#cropRatios'));
+        sizeCrop(); drawCrop(); save();
+      }));
       $('#cropZoom').addEventListener('input', e => { crop.zoom = parseFloat(e.target.value); drawCrop(); });
       (function () {
-        const w = $('#cropWrap'); let d = false, px = 0, py = 0;
-        w.addEventListener('pointerdown', e => { d = true; px = e.clientX; py = e.clientY; w.setPointerCapture(e.pointerId); });
-        w.addEventListener('pointermove', e => {
-          if (!d) return; const k = $('#cropCv').width / w.clientWidth;
-          crop.x += (e.clientX - px) * k; crop.y += (e.clientY - py) * k; px = e.clientX; py = e.clientY; drawCrop();
+        const wrap = $('#cropWrap'); let d = false, px = 0, py = 0;
+        wrap.addEventListener('pointerdown', e => {
+          if (!crop.ratio) return;
+          d = true; px = e.clientX; py = e.clientY;
+          try { wrap.setPointerCapture(e.pointerId); } catch (err) { }
         });
-        ['pointerup', 'pointercancel'].forEach(ev => w.addEventListener(ev, () => d = false));
-        w.addEventListener('wheel', e => {
+        wrap.addEventListener('pointermove', e => {
+          if (!d) return;
+          const k = $('#cropCv').width / wrap.clientWidth;
+          crop.x += (e.clientX - px) * k; crop.y += (e.clientY - py) * k;
+          px = e.clientX; py = e.clientY; drawCrop();
+        });
+        ['pointerup', 'pointercancel'].forEach(ev => wrap.addEventListener(ev, () => d = false));
+        wrap.addEventListener('wheel', e => {
+          if (!crop.ratio) return;
           e.preventDefault(); crop.zoom = clamp(crop.zoom * (e.deltaY < 0 ? 1.08 : .93), 1, 4);
           $('#cropZoom').value = crop.zoom; drawCrop();
         }, { passive: false });
       })();
       $('#cropOk').addEventListener('click', () => {
-        const o = document.createElement('canvas'); o.width = o.height = 360;
-        const c = o.getContext('2d'); c.imageSmoothingQuality = 'high'; c.drawImage($('#cropCv'), 0, 0, 360, 360);
-        const url = o.toDataURL('image/png');
-        $('#cropModal').classList.remove('on'); if (crop.cb) crop.cb(url); crop.img = null;
+        const cv = $('#cropCv');
+        if (!crop.img) { $('#cropModal').classList.remove('on'); return; }
+        const o = document.createElement('canvas');
+        const k = Math.min(1, (crop.max || 1200) / cv.width);
+        o.width = Math.max(1, Math.round(cv.width * k)); o.height = Math.max(1, Math.round(cv.height * k));
+        const c = o.getContext('2d'); c.imageSmoothingQuality = 'high';
+        c.drawImage(cv, 0, 0, o.width, o.height);
+        const url = crop.fmt === 'png' ? o.toDataURL('image/png') : o.toDataURL('image/jpeg', 0.92);
+        $('#cropModal').classList.remove('on');
+        if (crop.cb) crop.cb(url);
+        crop.img = null;
       });
       $('#cropNo').addEventListener('click', () => { $('#cropModal').classList.remove('on'); crop.img = null; });
 
       /* ===================== 이미지 블록 ===================== */
       $('#btnImgPick').addEventListener('click', () => $('#imgFile').click());
+      function useImage(u) {
+        S.ui.img = u;
+        const b = S.blocks[cur];
+        if (b && b.kind === 'img') {          // 이미 사진 블록이 열려 있으면 바로 교체
+          b.src = u; b.w = S.ui.imgW; b.rad = S.ui.imgRad;
+          render(); save(); toast('사진을 넣었습니다');
+        } else {
+          save(); toast('사진을 담았습니다 — ＋ 추가를 누르세요');
+        }
+        syncImgPreview();
+      }
+      function syncImgPreview() {
+        const t = $('#imgThumb'); if (!t) return;
+        const b = S.blocks[cur];
+        const src = (b && b.kind === 'img' && b.src) ? b.src : S.ui.img;
+        t.style.backgroundImage = src ? 'url("' + src + '")' : 'none';
+        t.classList.toggle('empty', !src);
+      }
       $('#imgFile').addEventListener('change', e => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
-        const fr = new FileReader();
-        fr.onload = () => shrink(fr.result, 1400, u => { S.ui.img = u; toast('이미지를 담았습니다. 추가를 누르세요'); save(); });
-        fr.readAsDataURL(f); e.target.value = '';
+        if (!/^image\//.test(f.type)) { toast('이미지 파일이 아닙니다'); e.target.value = ''; return; }
+        openCrop(f, useImage, { max: 1200, fmt: 'jpeg' });
+        e.target.value = '';
       });
       $('#btnImgCrop').addEventListener('click', () => {
-        if (!S.ui.img) { toast('먼저 이미지를 고르세요'); return; }
-        fetch(S.ui.img).then(r => r.blob()).then(b => openCrop(b, u => { S.ui.img = u; toast('잘랐습니다'); save(); }, true));
+        const b = S.blocks[cur];
+        const src = (b && b.kind === 'img' && b.src) ? b.src : S.ui.img;
+        if (!src) { toast('먼저 사진을 고르세요'); return; }
+        openCrop(src, useImage, { max: 1200, fmt: 'jpeg' });
       });
       function shrink(url, maxW, cb) {
         const im = new Image();
@@ -3541,7 +4125,7 @@
       bindR('bgY', () => S.bg.y, v => S.bg.y = v, pc);
       bindR('bgBlur', () => S.bg.blur, v => { S.bg.blur = v; rebuildBg(); }, px);
       bindR('ovA', () => S.bg.ovA, v => S.bg.ovA = v, pc);
-      bindC('bgA', () => S.bg.a, v => S.bg.a = v); bindC('bgB', () => S.bg.b, v => S.bg.b = v); bindC('bgC', () => S.bg.c, v => S.bg.c = v);
+      bindC('bgA', () => S.bg.a, v => { S.bg.a = v; S.bg.preset = ''; seg('data-bgp', ''); }); bindC('bgB', () => S.bg.b, v => S.bg.b = v); bindC('bgC', () => S.bg.c, v => S.bg.c = v);
       bindC('ovC', () => S.bg.ovC, v => S.bg.ovC = v);
       bindR('fs', () => S.type.fs, v => S.type.fs = v, v => (Math.round(v * 10) / 10) + 'px');
       bindR('ls', () => S.type.ls, v => S.type.ls = v, px);
@@ -3555,17 +4139,12 @@
       bindR('avSz', () => S.bub.av, v => S.bub.av = v, px);
       bindR('bsz', () => S.bub.bsz, v => S.bub.bsz = v, px);
       bindR('blh', () => S.bub.blh, v => S.bub.blh = v);
-      bindR('bpv', () => S.bub.bpv, v => S.bub.bpv = v, px);
-      bindR('bph', () => S.bub.bph, v => S.bub.bph = v, px);
       bindR('brad', () => S.bub.brad, v => S.bub.brad = v, px);
       bindR('bmax', () => S.bub.bmax, v => S.bub.bmax = v, pc);
       bindR('bgap', () => S.bub.gap, v => S.bub.gap = v, px);
       bindR('nsz', () => S.bub.nsz, v => S.bub.nsz = v, px);
-      bindR('btw', () => S.bub.btw, v => S.bub.btw = v, px);
-      bindC('btc', () => S.bub.btc, v => S.bub.btc = v);
       bindK('bShowAv', () => S.bub.showAv, v => S.bub.showAv = v);
       bindK('bShowNm', () => S.bub.showNm, v => S.bub.showNm = v);
-      bindK('bTail', () => S.bub.tail, v => S.bub.tail = v);
       bindK('bGroup', () => S.bub.group, v => S.bub.group = v);
       bindK('bQuote', () => S.bub.keepQuote, v => S.bub.keepQuote = v);
       bindK('bShadow', () => S.bub.shadow, v => S.bub.shadow = v);
@@ -3574,8 +4153,6 @@
       bindC('cLineA', () => S.color.lineA, v => S.color.lineA = v);
       bindC('cLineB', () => S.color.lineB, v => S.color.lineB = v);
       bindC('cHlA', () => S.color.hlA, v => S.color.hlA = v);
-      bindC('cHlB', () => S.color.hlB, v => S.color.hlB = v);
-      bindC('cHlC', () => S.color.hlC, v => S.color.hlC = v);
       bindC('cQA', () => S.color.qA, v => S.color.qA = v);
       bindC('cQB', () => S.color.qB, v => S.color.qB = v);
       bindC('cPr', () => S.color.pr, v => S.color.pr = v);
@@ -3597,8 +4174,11 @@
       bindK('pgOn', () => S.sign.pg, v => S.sign.pg = v);
       bindR('dvLen', () => S.ui.dvLen, v => S.ui.dvLen = v, pc);
       bindR('dvPad', () => S.ui.dvPad, v => S.ui.dvPad = v, px);
-      bindR('imgW', () => S.ui.imgW, v => S.ui.imgW = v, pc);
-      bindR('imgRad', () => S.ui.imgRad, v => S.ui.imgRad = v, px);
+      const imgBlk = () => { const b = S.blocks[cur]; return (b && b.kind === 'img') ? b : null; };
+      bindR('imgW', () => { const b = imgBlk(); return (b && b.w != null) ? b.w : S.ui.imgW; },
+        v => { S.ui.imgW = v; const b = imgBlk(); if (b) b.w = v; }, pc);
+      bindR('imgRad', () => { const b = imgBlk(); return (b && b.rad != null) ? b.rad : S.ui.imgRad; },
+        v => { S.ui.imgRad = v; const b = imgBlk(); if (b) b.rad = v; }, px);
       $('#font').addEventListener('change', () => { S.type.font = $('#font').value; render(); save(); });
       syncers.push(() => $('#font').value = S.type.font);
       function segBind(attr, fn) { $$('[' + attr + ']').forEach(b => b.addEventListener('click', () => { fn(b.getAttribute(attr)); seg(attr, b.getAttribute(attr)); render(); save(); })); }
@@ -3607,15 +4187,20 @@
       segBind('data-bgt', v => { S.bg.type = v; syncBgRows(); });
       segBind('data-bgdir', v => S.bg.dir = +v);
       segBind('data-fw', v => S.type.fw = +v);
-      segBind('data-ta', v => S.type.ta = v);
+      segBind('data-ta', v => {
+        snap();
+        S.type.ta = v;
+        S.blocks.forEach(b => { if (b.kind !== 'div' && b.kind !== 'page') b.align = v; });
+        S.ui.align = v; seg('data-balign', v);
+      });
       segBind('data-wrap', v => S.type.wrap = v);
-      segBind('data-btheme', v => S.bub.theme = v);
       segBind('data-avsh', v => S.bub.avsh = v);
       segBind('data-scale', v => S.out.scale = +v);
       segBind('data-fmt', v => S.out.fmt = v);
       segBind('data-sgal', v => S.sign.al = v);
       $$('[data-bgp]').forEach(b => b.addEventListener('click', () => {
         const p = BGP[b.dataset.bgp];
+        S.bg.preset = b.dataset.bgp;
         S.bg.type = 'solid'; S.bg.a = p.a; S.color.text = p.t; S.color.sub = p.s;
         seg('data-bgt', 'solid'); seg('data-bgp', b.dataset.bgp); syncBgRows(); syncAll(); render(); save();
       }));
@@ -3634,14 +4219,22 @@
       });
       $('#btnBgClr').addEventListener('click', () => { S.bg.imgRaw = null; S.bg.img = null; S.bg.type = 'solid'; seg('data-bgt', 'solid'); syncBgRows(); render(); save(); });
       function rebuildBg() {
-        if (!S.bg.imgRaw) { S.bg.img = null; render(); save(); return; }
-        if (!S.bg.blur) { S.bg.img = S.bg.imgRaw; render(); save(); return; }
+        if (!S.bg.imgRaw) { S.bg.img = null; S.bg.iw = S.bg.ih = 0; render(); save(); return; }
         const im = new Image();
         im.onload = () => {
-          const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height;
+          S.bg.iw = im.naturalWidth || im.width;
+          S.bg.ih = im.naturalHeight || im.height;
+          if (!S.bg.blur) { S.bg.img = S.bg.imgRaw; render(); save(); return; }
+          const cv = document.createElement('canvas');
+          cv.width = S.bg.iw; cv.height = S.bg.ih;
           const c = cv.getContext('2d');
-          try { c.filter = 'blur(' + (S.bg.blur * (im.width / S.canvas.w)) + 'px)'; } catch (e) { }
-          c.drawImage(im, 0, 0);
+          const bp = S.bg.blur * (S.bg.iw / S.canvas.w);
+          // 흐림 때문에 가장자리가 비어 검은 테두리로 남는 것을 막으려고
+          // 이미지를 여백만큼 넓게 그린 뒤 흐린다
+          const m = Math.ceil(bp * 2.4);
+          try { c.filter = 'blur(' + bp + 'px)'; } catch (e) { }
+          c.drawImage(im, -m, -m, cv.width + m * 2, cv.height + m * 2);
+          try { c.filter = 'none'; } catch (e) { }
           try { S.bg.img = cv.toDataURL('image/jpeg', .94); } catch (e) { S.bg.img = S.bg.imgRaw; }
           render(); save();
         };
@@ -3670,20 +4263,6 @@
           document.documentElement.style.setProperty('--panelW', S.panelW + 'px'); fit();
         });
         ['pointerup', 'pointercancel'].forEach(ev => rz.addEventListener(ev, () => { if (on) { on = false; rz.classList.remove('on'); save(); } }));
-        const g = $('#grip'); let dg = false, sy = 0, h0 = 0, dy = 0;
-        g.addEventListener('pointerdown', e => { dg = true; dy = 0; sy = e.clientY; h0 = $('#panel').offsetHeight; g.classList.add('on'); g.setPointerCapture(e.pointerId); });
-        g.addEventListener('pointermove', e => {
-          if (!dg) return; dy = e.clientY - sy;
-          const h = clamp(h0 - dy, 90, window.innerHeight * .92);
-          S.sheetH = Math.round(h / window.innerHeight * 100);
-          $('#panel').classList.remove('min');
-          document.documentElement.style.setProperty('--sheetH', S.sheetH + 'vh'); fit();
-        });
-        ['pointerup', 'pointercancel'].forEach(ev => g.addEventListener(ev, () => {
-          if (!dg) return; dg = false; g.classList.remove('on');
-          if (Math.abs(dy) < 5) $('#panel').classList.toggle('min');
-          save();
-        }));
       })();
 
       /* ===================== 내보내기 ===================== */
@@ -3834,6 +4413,12 @@
       document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
       setInterval(flush, 4000);
       function clampMins() {
+        if (!FONTS[S.type.font]) S.type.font = 'pretendard';
+        S.bub.theme = 'basic'; S.bub.tail = true; S.bub.btw = 0;
+        S.bub.bpv = 9; S.bub.bph = 14;   // 말풍선 안쪽 여백(고정)
+        S.bg.size = Math.max(100, S.bg.size || 100);
+        S.bg.x = clamp(S.bg.x, 0, 100); S.bg.y = clamp(S.bg.y, 0, 100);
+        if (!S.ink) S.ink = { text: '#b03a2e', hl: '#f2e39b' };
         S.canvas.padX = Math.max(20, S.canvas.padX);
         S.canvas.padY = Math.max(30, S.canvas.padY);
         S.sign.gap = Math.max(20, S.sign.gap);
@@ -3885,6 +4470,19 @@
         };
         fr.readAsText(f); e.target.value = '';
       });
+      $('#btnResetStyle').addEventListener('click', () => {
+        if (!confirm('서식 설정을 기본값으로 돌릴까요? 블록과 인물은 그대로 남습니다.')) return;
+        const d = defState();
+        S.canvas = d.canvas; S.bg = d.bg; S.type = d.type; S.bub = d.bub;
+        S.color = d.color; S.smart = d.smart; S.ink = d.ink;
+        S.out.scale = d.out.scale; S.out.fmt = d.out.fmt; S.out.transparent = d.out.transparent;
+        S.sign.sep = d.sign.sep; S.sign.al = d.sign.al; S.sign.sz = d.sign.sz;
+        S.sign.gap = d.sign.gap; S.sign.c = d.sign.c;
+        S.ui.align = d.ui.align; S.ui.tw = d.ui.tw;
+        S.blocks.forEach(b => { if (b.kind !== 'div' && b.kind !== 'page') b.align = d.ui.align; });
+        clampMins(); syncAll(); render(); save();
+        toast('서식을 기본값으로 돌렸습니다');
+      });
       $('#btnReset').addEventListener('click', () => {
         if (!confirm('모든 블록과 설정을 기본값으로 되돌릴까요?')) return;
         Store.del(KEY); S = defState(); syncAll(); render(); save();
@@ -3902,15 +4500,12 @@
       function syncAll() {
         syncers.forEach(f => f());
         seg('data-ratio', S.canvas.ratio); seg('data-cols', S.canvas.cols);
-        seg('data-bgt', S.bg.type); seg('data-bgdir', S.bg.dir);
+        seg('data-bgt', S.bg.type); seg('data-bgdir', S.bg.dir); seg('data-bgp', S.bg.preset || '');
         seg('data-fw', S.type.fw); seg('data-ta', S.type.ta); seg('data-wrap', S.type.wrap);
-        seg('data-btheme', S.bub.theme); seg('data-avsh', S.bub.avsh);
+        seg('data-avsh', S.bub.avsh);
         seg('data-scale', S.out.scale); seg('data-fmt', S.out.fmt); seg('data-sgal', S.sign.al);
         syncBgRows(); syncEd(); renderPeople();
-        ['dotText', 'dotSub', 'dotHlA', 'dotHlB', 'dotHlC'].forEach((id, i) => {
-          const c = [S.color.text, S.color.sub, S.color.hlA, S.color.hlB, S.color.hlC][i];
-          const el = $('#' + id); if (el) el.style.background = c;
-        });
+        syncInk();
         Object.keys(S.ui.acc).forEach(k => {
           const a = $('.acc[data-acc="' + k + '"]'); if (a) a.classList.toggle('open', !!S.ui.acc[k]);
         });
