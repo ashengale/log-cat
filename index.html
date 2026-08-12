@@ -3,216 +3,274 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f7f6f3">
+<meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
 <title>로그 발췌기</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
 <style>
 *{box-sizing:border-box}
 :root{
-  --stage:#e9e7e2; --surface:#fff; --surface2:#f7f6f3; --surface3:#f1efeb;
-  --line:#e6e4df; --line2:#d5d2cb;
-  --fg:#23262b; --fg2:#666c75; --fg3:#9aa0a8;
-  --acc:#3c7fbe; --acc2:#2f6699; --acc-soft:#eaf2fa; --danger:#b4473a;
-  --r:9px; --tap:34px; --panelW:352px; --sheetH:54vh;
+  --paper:#ffffff;
+  --stage:#f2f2f1;
+  --tint:#fafafa;
+  --line:#ededec;
+  --line2:#dededc;
+  --fg:#111214;
+  --fg2:#5e6165;
+  --fg3:#9a9c9f;
+  --ink:#111214;
+  --ink-soft:#f3f3f2;
+  --danger:#a3352a;
+  --r:3px; --tap:34px; --panelW:360px; --sheetH:56vh; --kb:0px; --kbon:0;
   --ui:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 html,body{height:100%;margin:0;overflow:hidden}
-body{background:var(--stage);color:var(--fg);font-family:var(--ui);font-size:13px;line-height:1.5;
-  -webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{background:var(--paper);color:var(--fg);font-family:var(--ui);font-size:13px;line-height:1.5;
+  -webkit-text-size-adjust:100%;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
-:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
-::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-thumb{background:#cbc8c1;border-radius:10px;border:3px solid transparent;background-clip:content-box}
+:focus-visible{outline:1.5px solid var(--ink);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:#d7d7d5;border-radius:0;border:4px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#b9b9b6;background-clip:content-box}
 ::-webkit-scrollbar-track{background:transparent}
 
 /* ===== 골격 ===== */
-#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
-.topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));
-  background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto;min-width:0;z-index:80}
-.logo{font-weight:800;font-size:14px;letter-spacing:-.02em;white-space:nowrap;flex:0 0 auto}
-.modes{display:flex;gap:3px;background:var(--surface3);border-radius:9px;padding:3px;flex:0 0 auto}
-.modes button{padding:0 10px;height:28px;border-radius:7px;font-size:12px;font-weight:600;color:var(--fg2);
-  display:flex;align-items:center}
-.modes button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.09)}
-.topright{margin-left:auto;display:flex;gap:6px;flex:0 0 auto}
-@media (max-width:600px){ .logo{display:none} }
+#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden;background:var(--paper)}
+.topbar{display:flex;align-items:center;gap:14px;padding:0 14px;height:46px;
+  padding-top:env(safe-area-inset-top);background:var(--paper);
+  border-bottom:1px solid var(--line);flex:0 0 auto;min-width:0;z-index:80}
+.logo{font-size:11px;font-weight:700;letter-spacing:.18em;white-space:nowrap;flex:0 0 auto;
+  text-transform:uppercase;padding-right:14px;border-right:1px solid var(--line);line-height:1}
+.topright{margin-left:auto;display:flex;gap:7px;flex:0 0 auto;align-items:center}
+@media (max-width:620px){ .logo{display:none} .topbar{gap:10px} }
 
 .main{flex:1 1 auto;display:flex;min-height:0;min-width:0;overflow:hidden}
 
-/* 미리보기 */
+/* 결과물 영역 */
 .view{flex:1 1 auto;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--stage)}
-.viewbar{display:flex;align-items:center;gap:5px;padding:7px 10px;border-bottom:1px solid var(--line);
-  background:var(--surface2);overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
+.viewbar{display:flex;align-items:center;gap:2px;padding:0 10px;height:38px;
+  border-bottom:1px solid var(--line);background:var(--paper);
+  overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
 .viewbar::-webkit-scrollbar{display:none}
-.viewbar .sp{flex:1 1 auto}
-.zoom{display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line2);border-radius:8px;padding:2px;flex:0 0 auto}
-.zoom button{width:26px;height:26px;border-radius:6px;display:grid;place-items:center;font-size:13px;color:var(--fg2)}
-.zoom button:hover{background:var(--surface3)}
-.zoom .z{font-size:11px;color:var(--fg3);min-width:38px;text-align:center;font-variant-numeric:tabular-nums}
-.stage{flex:1 1 auto;overflow:auto;overscroll-behavior:contain;padding:18px 14px 30px;min-height:0}
+.viewbar .sp{flex:1 1 auto;min-width:6px}
+.vb{height:26px;padding:0 8px;font-size:11.5px;color:var(--fg2);border-radius:var(--r);white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px}
+.vb:hover{background:var(--ink-soft);color:var(--fg)}
+.vb.on{background:var(--ink);color:#fff}
+.vb.dg{color:var(--danger)}
+.zoom{display:flex;align-items:center;gap:0;margin-right:4px;flex:0 0 auto;
+  border:1px solid var(--line);border-radius:var(--r)}
+.zoom button{width:25px;height:25px;display:grid;place-items:center;font-size:12px;color:var(--fg2)}
+.zoom button:hover{background:var(--ink-soft);color:var(--fg)}
+.zoom .z{font-size:10.5px;color:var(--fg3);min-width:40px;text-align:center;font-family:var(--mono);
+  border-left:1px solid var(--line);border-right:1px solid var(--line);height:25px;line-height:25px}
+.zoom .zf{font-size:10.5px;width:auto;padding:0 7px}
+.stage{flex:1 1 auto;overflow:auto;overscroll-behavior:contain;padding:26px 16px 34px;min-height:0}
 .fitbox{margin:0 auto;position:relative}
 .scaler{transform-origin:top left}
-.card{position:relative;overflow:hidden;box-shadow:0 0 0 1px rgba(30,34,40,.08),0 6px 22px rgba(30,34,40,.09)}
+.card{position:relative;overflow:hidden;box-shadow:0 0 0 1px rgba(17,18,20,.09)}
 .card .bgi,.card .bgo{position:absolute;inset:0;pointer-events:none}
 .card .bgi{background-position:center;background-repeat:no-repeat}
-.meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px auto 0;font-size:11px;
-  color:var(--fg3);font-variant-numeric:tabular-nums}
-.meta b{color:var(--fg2);font-weight:600}
-.meta .w{color:#96691f}
+.meta{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:14px auto 0;font-size:10.5px;
+  color:var(--fg3);font-family:var(--mono);letter-spacing:.02em}
+.meta b{color:var(--fg2);font-weight:500}
+.meta .w{color:#8a6a1f;font-family:var(--ui)}
 
-/* 선택 블록 바 */
-.selbar{position:sticky;bottom:0;z-index:40;display:none;gap:4px;align-items:center;flex-wrap:wrap;
-  padding:7px 9px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
-  border-top:1px solid var(--line);box-shadow:0 -3px 14px rgba(0,0,0,.07)}
-.selbar.on{display:flex}
-.selbar .lbl{font-size:11px;font-weight:700;color:var(--fg3);margin-right:2px}
+
+/* 패널 헤더 */
+.phead{flex:0 0 auto;background:var(--paper);border-bottom:1px solid var(--line)}
+.phrow{display:flex;align-items:center;gap:6px;padding:0 12px 7px}
+.phrow .t{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--fg3);text-transform:uppercase}
+.phrow .sp{flex:1 1 auto}
+.szb{width:26px;height:24px;display:grid;place-items:center;border:1px solid var(--line2);
+  border-radius:var(--r);font-size:10px;color:var(--fg2);line-height:1}
+.szb:hover{background:var(--tint)}
+.szb.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* 편집 섹션 */
+.edsec{padding:12px 0 14px;border-bottom:1px solid var(--line)}
+.kindrow{display:flex;gap:0;margin-bottom:9px;border:1px solid var(--line2);border-radius:var(--r);
+  overflow:hidden}
+.kindrow button{flex:1 1 auto;height:29px;font-size:11px;color:var(--fg2);display:grid;place-items:center;
+  border-left:1px solid var(--line)}
+.kindrow button:first-child{border-left:0}
+.kindrow button.on{background:var(--ink);color:#fff;font-weight:600}
+.fmt{position:sticky;top:0;z-index:6;display:flex;flex-wrap:wrap;gap:3px;align-items:center;
+  padding:7px 0;background:var(--paper);border-bottom:1px solid var(--line);margin-bottom:0}
+.fmt .gap{width:1px;height:15px;background:var(--line);margin:0 3px}
+.field{border:1px solid var(--line2);border-top:0;border-radius:0 0 var(--r) var(--r);padding:10px;
+  min-height:96px;max-height:38vh;overflow-y:auto;font-size:14px;line-height:1.7;outline:none;
+  -webkit-user-select:text;user-select:text}
+.field:focus{border-color:var(--ink)}
+.field:empty::before{content:attr(data-ph);color:var(--fg3);font-size:12.5px;line-height:1.7}
+.field .hl{padding:.02em .08em}
+.fieldbar{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.fieldbar>.btn{flex:1 1 auto}
+.actrow{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap}
+.bound{font-size:10px;color:var(--fg3);font-family:var(--mono);margin-top:7px}
+.bound b{color:var(--fg2);font-weight:500}
+
+/* 서명 고정 */
+.signsec{padding:13px 0 15px;border-bottom:1px solid var(--line)}
+.signrow{display:flex;align-items:center;gap:6px}
+.signrow input{flex:1 1 auto;text-align:center;min-height:30px}
+.signrow select{width:52px;flex:0 0 auto;text-align:center;min-height:30px;padding:0 4px;background-image:none}
 
 /* 편집바 */
-.resizer{flex:0 0 auto;width:7px;cursor:col-resize;background:var(--stage);border-left:1px solid var(--line);
-  position:relative;touch-action:none}
-.resizer::after{content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);width:3px;height:36px;
-  border-radius:3px;background:#cbc8c1}
-.resizer:hover::after,.resizer.on::after{background:var(--acc)}
-.panel{display:flex;flex-direction:column;background:var(--surface);flex:0 0 auto;min-height:0;min-width:0}
-.pbody{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:0 12px 26px;min-height:0}
+.resizer{flex:0 0 auto;width:9px;cursor:col-resize;background:var(--paper);
+  border-left:1px solid var(--line);position:relative;touch-action:none}
+.resizer::after{content:"";position:absolute;left:4px;top:0;bottom:0;width:1px;background:transparent}
+.resizer:hover::after,.resizer.on::after{background:var(--ink)}
+.panel{display:flex;flex-direction:column;background:var(--paper);flex:0 0 auto;min-height:0;min-width:0}
+.pbody{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:0 16px 30px;min-height:0}
 .grip{display:none}
 @media (min-width:960px){ .main{flex-direction:row} .panel{width:var(--panelW)} }
 @media (max-width:959px){
   .main{flex-direction:column;position:relative}
   .resizer{display:none}
-  .view{flex:1 1 auto;padding-bottom:0}
-  .stage{padding:12px 10px calc(var(--sheetH) + 8px)}
-  .panel{position:fixed;left:0;right:0;bottom:0;z-index:70;height:var(--sheetH);
-    border-top:1px solid var(--line2);border-radius:16px 16px 0 0;box-shadow:0 -6px 26px rgba(30,34,40,.14);
-    padding-bottom:env(safe-area-inset-bottom)}
-  .panel.min{height:74px!important}
-  .grip{display:block;width:100%;height:20px;position:relative;flex:0 0 auto;touch-action:none;cursor:ns-resize}
-  .grip::after{content:"";position:absolute;left:50%;top:8px;transform:translateX(-50%);width:40px;height:4px;
-    border-radius:4px;background:#cbc8c1}
-  .grip.on::after{background:var(--acc)}
-  .selbar{position:fixed;left:0;right:0;bottom:var(--sheetH);border-bottom:1px solid var(--line)}
+  .stage{padding:14px 12px calc(var(--sheetH) + 10px)}
+  .panel{position:fixed;left:0;right:0;bottom:var(--kb,0px);z-index:70;height:var(--sheetH);
+    max-height:calc(100dvh - 46px - var(--kb,0px));
+    border-top:1px solid var(--line2);box-shadow:0 -1px 0 rgba(17,18,20,.05);
+    padding-bottom:calc(env(safe-area-inset-bottom) * (1 - var(--kbon,0)))}
+  .panel.min{height:62px!important}
+  .grip{display:block;width:100%;height:22px;position:relative;flex:0 0 auto;touch-action:none;cursor:ns-resize}
+  .grip::after{content:"";position:absolute;left:50%;top:9px;transform:translateX(-50%);width:30px;height:3px;
+    border-radius:2px;background:#cfcfcc}
+  .grip:active::after,.grip.on::after{background:var(--ink)}
+  .field{max-height:32vh}
   :root{--tap:38px}
   input[type=text],input[type=number],select,textarea{font-size:16px}
 }
 
-/* ===== 공통 컨트롤 ===== */
-.btn{min-height:var(--tap);padding:0 11px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line2);
-  font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  white-space:nowrap;transition:background .12s,border-color .12s}
-.btn:hover{background:var(--surface2);border-color:#c2beb6}
-.btn.sm{min-height:29px;padding:0 8px;font-size:11.5px}
-.btn.ico{min-width:var(--tap);padding:0 7px}
-.btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
-.btn.pri:hover{background:var(--acc2);border-color:var(--acc2)}
-.btn.gho{background:transparent;border-color:transparent;color:var(--fg2)}
-.btn.gho:hover{background:var(--surface2);border-color:var(--line)}
-.btn.del{color:var(--danger);border-color:#e7d1cd}
-.btn.del:hover{background:#fdf5f4}
-.btn:disabled{opacity:.42;cursor:default}
+/* ===== 컨트롤 ===== */
+.btn{min-height:var(--tap);padding:0 12px;border-radius:var(--r);background:transparent;
+  border:1px solid var(--line2);font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;
+  justify-content:center;gap:5px;white-space:nowrap;transition:background .1s,border-color .1s,color .1s}
+.btn:hover{background:var(--tint);border-color:#c8c8c5}
+.btn.sm{min-height:28px;padding:0 9px;font-size:11.5px}
+.btn.ico{min-width:var(--tap);padding:0 8px}
+.btn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.pri{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600;letter-spacing:.01em}
+.btn.pri:hover{background:#2c2e32;border-color:#2c2e32}
+.btn.gho{border-color:transparent;color:var(--fg2)}
+.btn.gho:hover{background:var(--tint);border-color:var(--line)}
+.btn.del{color:var(--danger);border-color:#e8d8d5}
+.btn.del:hover{background:#fcf6f5;border-color:#dcc0bb}
+.btn:disabled{opacity:.4;cursor:default}
 .seg{display:flex;gap:5px;flex-wrap:wrap}
 .seg>.btn{flex:1 1 auto}
-.seg.tight{gap:4px}
-.row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.seg.tight{gap:0}
+.seg.tight>.btn{border-radius:0;margin-left:-1px}
+.seg.tight>.btn:first-child{border-radius:var(--r) 0 0 var(--r);margin-left:0}
+.seg.tight>.btn:last-child{border-radius:0 var(--r) var(--r) 0}
+.seg.tight>.btn.on{position:relative;z-index:1}
+
+.row{display:flex;align-items:center;gap:10px;margin-bottom:7px;min-height:28px}
 .row:last-child{margin-bottom:0}
-.row>label{flex:0 0 68px;font-size:11.5px;color:var(--fg2)}
-.row .val{margin-left:auto;font-size:11px;color:var(--fg3);min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
-input[type=range]{-webkit-appearance:none;appearance:none;flex:1 1 auto;height:20px;background:none;min-width:0}
-input[type=range]::-webkit-slider-runnable-track{height:3px;background:#ddd9d3;border-radius:3px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
-  background:#fff;border:1.5px solid var(--acc);margin-top:-6px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-input[type=range]::-moz-range-track{height:3px;background:#ddd9d3;border-radius:3px}
-input[type=range]::-moz-range-thumb{width:14px;height:14px;border:1.5px solid var(--acc);border-radius:50%;background:#fff}
-input[type=text],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line2);
+.row>label{flex:0 0 66px;font-size:11.5px;color:var(--fg2)}
+.row .val{margin-left:auto;font-size:10.5px;color:var(--fg3);min-width:44px;text-align:right;font-family:var(--mono)}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1 1 auto;height:18px;background:none;min-width:0}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--line2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;
+  background:var(--ink);border:0;margin-top:-5px}
+input[type=range]::-moz-range-track{height:1px;background:var(--line2)}
+input[type=range]::-moz-range-thumb{width:11px;height:11px;border:0;border-radius:50%;background:var(--ink)}
+input[type=text],input[type=number],select,textarea{background:var(--paper);border:1px solid var(--line2);
   border-radius:var(--r);padding:0 9px;min-height:var(--tap);width:100%;font-size:12.5px;min-width:0}
-input:focus,textarea:focus,select:focus{border-color:var(--acc);outline:none}
-textarea{padding:9px;line-height:1.6;resize:vertical;min-height:76px}
-select{-webkit-appearance:none;appearance:none;padding-right:26px;
+input:focus,textarea:focus,select:focus{border-color:var(--ink);outline:none}
+textarea{padding:10px;line-height:1.65;resize:vertical;min-height:80px}
+select{-webkit-appearance:none;appearance:none;padding-right:24px;
   background-image:linear-gradient(45deg,transparent 50%,var(--fg2) 50%),linear-gradient(135deg,var(--fg2) 50%,transparent 50%);
-  background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-input[type=color]{-webkit-appearance:none;appearance:none;border:1px solid var(--line2);border-radius:7px;
-  width:38px;height:30px;padding:0;background:none;flex:0 0 auto;cursor:pointer}
+  background-position:calc(100% - 14px) 52%,calc(100% - 9px) 52%;background-size:4px 4px,4px 4px;background-repeat:no-repeat}
+input[type=color]{-webkit-appearance:none;appearance:none;border:1px solid var(--line2);border-radius:var(--r);
+  width:34px;height:26px;padding:0;background:none;flex:0 0 auto;cursor:pointer}
 input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
-input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
-.chk{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--fg2);min-height:30px;cursor:pointer}
-.chk input{width:16px;height:16px;accent-color:var(--acc);flex:0 0 auto}
-.chk b{color:var(--fg)}
-.hint{font-size:11px;color:var(--fg3);line-height:1.6;margin:7px 0 0}
-.hint code{background:var(--surface3);padding:1px 4px;border-radius:4px;color:var(--fg2)}
-.num{display:flex;align-items:center;gap:0;border:1px solid var(--line2);border-radius:8px;overflow:hidden;flex:0 0 auto}
-.num button{width:26px;height:28px;display:grid;place-items:center;color:var(--fg2);font-size:14px;background:var(--surface2)}
-.num button:hover{background:var(--surface3)}
-.num span{min-width:46px;text-align:center;font-size:11.5px;font-variant-numeric:tabular-nums}
+input[type=color]::-webkit-color-swatch{border:0;border-radius:1px}
+.chk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg2);min-height:29px;cursor:pointer}
+.chk input{width:15px;height:15px;accent-color:var(--ink);flex:0 0 auto;border-radius:0}
+.chk b{color:var(--fg);font-weight:600}
+.hint{font-size:11px;color:var(--fg3);line-height:1.65;margin:8px 0 0}
+.hint code{font-family:var(--mono);font-size:10.5px;color:var(--fg2);background:var(--ink-soft);padding:1px 4px}
 
-/* 작성 카드 */
-.composer{background:var(--surface2);border:1px solid var(--line);border-radius:13px;padding:11px;margin:11px 0}
-.composer h4{margin:0 0 9px;font-size:11.5px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;gap:6px}
-.composer h4 span{margin-left:auto;font-size:10.5px;font-weight:500;color:var(--fg3)}
-.fmtbar{display:flex;gap:3px;flex-wrap:wrap;padding:6px 0 2px}
-.fb{min-width:29px;height:29px;padding:0 6px;border-radius:7px;border:1px solid var(--line2);background:var(--surface);
-  font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
-.fb:hover{background:var(--surface3)}
-.fb.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.fb .dot{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.18)}
-.kind{display:grid;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:4px;margin-bottom:9px}
-.kind button{height:32px;border-radius:8px;border:1px solid var(--line2);background:var(--surface);font-size:11.5px;
-  display:grid;place-items:center;font-weight:600;color:var(--fg2)}
-.kind button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+/* 작성 영역 */
+.composer{padding:14px 0 16px;border-bottom:1px solid var(--line)}
+.composer h4{margin:0 0 10px;font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--fg3);
+  display:flex;align-items:baseline;gap:8px;text-transform:uppercase}
+.composer h4 span{margin-left:auto;font-size:10px;font-weight:400;letter-spacing:0;color:var(--fg3);
+  font-family:var(--mono);text-transform:none}
+.kind{display:flex;flex-wrap:wrap;gap:0;margin-bottom:11px;border:1px solid var(--line2);border-radius:var(--r)}
+.kind button{flex:1 1 auto;height:30px;font-size:11.5px;color:var(--fg2);display:grid;place-items:center;
+  border-left:1px solid var(--line)}
+.kind button:first-child{border-left:0}
+.kind button:hover{background:var(--tint)}
+.kind button.on{background:var(--ink);color:#fff;font-weight:600}
+.fmtbar{display:flex;gap:4px;flex-wrap:wrap;padding:7px 0 3px}
+.fb{min-width:28px;height:28px;padding:0 7px;border-radius:var(--r);border:1px solid var(--line2);
+  background:var(--paper);font-size:11.5px;display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  color:var(--fg)}
+.fb:hover{background:var(--tint)}
+.fb.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.fb .dot{width:10px;height:10px;border-radius:1px;box-shadow:inset 0 0 0 1px rgba(17,18,20,.22)}
 
-/* 아코디언 */
-.tools{margin-top:4px}
-.tools>h4{margin:14px 0 8px;font-size:11px;font-weight:800;color:var(--fg3);letter-spacing:.08em}
-.acc{border:1px solid var(--line);border-radius:11px;margin-bottom:7px;overflow:hidden;background:var(--surface)}
-.acc>.h{width:100%;display:flex;align-items:center;gap:8px;padding:11px 11px;font-size:12.5px;font-weight:700}
-.acc>.h .ic{width:20px;text-align:center;color:var(--acc);font-size:13px}
-.acc>.h::after{content:"⌄";margin-left:auto;color:var(--fg3);font-size:13px;transition:transform .16s}
-.acc.open>.h::after{transform:rotate(180deg)}
-.acc>.b{display:none;padding:0 11px 12px;border-top:1px solid var(--line)}
+/* 도구 목록 */
+.tools>h4{margin:16px 0 2px;font-size:10px;font-weight:700;color:var(--fg3);letter-spacing:.14em;
+  text-transform:uppercase}
+.acc{border-bottom:1px solid var(--line)}
+.acc:first-of-type{border-top:1px solid var(--line)}
+.acc>.h{width:100%;display:flex;align-items:center;gap:9px;padding:12px 2px;font-size:12.5px;font-weight:500}
+.acc>.h .ic{width:15px;text-align:center;color:var(--fg3);font-size:11px}
+.acc>.h::after{content:"+";margin-left:auto;color:var(--fg3);font-size:13px;line-height:1;width:12px;text-align:center}
+.acc.open>.h{font-weight:700}
+.acc.open>.h::after{content:"–"}
+.acc>.b{display:none;padding:2px 2px 16px}
 .acc.open>.b{display:block}
-.sub{margin:11px 0 8px;font-size:10.5px;font-weight:800;color:var(--fg3);letter-spacing:.06em}
-.sub:first-child{margin-top:9px}
-.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(22px,1fr));gap:5px}
-.sw button{aspect-ratio:1;border-radius:50%;border:1px solid rgba(0,0,0,.14)}
-.sw button:hover{transform:scale(1.12)}
-.people{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
-.pitem{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px;border:1px solid var(--line);
-  background:var(--surface);cursor:pointer}
-.pitem:hover{background:var(--surface2)}
-.pitem.on{border-color:var(--acc);background:var(--acc-soft)}
-.pitem .av{width:26px;height:26px;border-radius:50%;background:#dcd9d3;overflow:hidden;flex:0 0 auto}
+.sub{margin:14px 0 8px;font-size:10px;font-weight:700;color:var(--fg3);letter-spacing:.12em;
+  padding-bottom:5px;border-bottom:1px solid var(--line);text-transform:uppercase}
+.sub:first-child{margin-top:4px}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(20px,1fr));gap:4px}
+.sw button{aspect-ratio:1;border-radius:1px;box-shadow:inset 0 0 0 1px rgba(17,18,20,.16)}
+.sw button:hover{outline:1px solid var(--ink);outline-offset:1px}
+
+/* 인물 */
+.people{display:flex;flex-direction:column;gap:0;margin-bottom:10px;border-top:1px solid var(--line)}
+.pitem{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.pitem:hover{background:var(--tint)}
+.pitem.on{background:var(--ink-soft)}
+.pitem .av{width:24px;height:24px;border-radius:50%;background:#e6e6e4;overflow:hidden;flex:0 0 auto}
 .pitem .av img{width:100%;height:100%;object-fit:cover;display:block}
 .pitem .nm{flex:1 1 auto;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pitem .sd{font-size:10px;color:var(--fg3)}
-.pitem .bd{width:13px;height:13px;border-radius:4px;border:1px solid rgba(0,0,0,.14)}
-.empty{font-size:11.5px;color:var(--fg3);padding:4px 0 8px}
-.box{border:1px solid var(--line);border-radius:11px;padding:11px;background:var(--surface2);margin-top:9px}
-.box h5{margin:0 0 9px;font-size:11.5px;font-weight:800}
+.pitem .sd{font-size:10px;color:var(--fg3);font-family:var(--mono)}
+.pitem .bd{width:12px;height:12px;border-radius:1px;box-shadow:inset 0 0 0 1px rgba(17,18,20,.16)}
+.empty{font-size:11.5px;color:var(--fg3);padding:10px 2px;border-bottom:1px solid var(--line)}
+.box{border:1px solid var(--line2);border-radius:var(--r);padding:12px;margin-top:10px;background:var(--tint)}
+.box h5{margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--fg2)}
 
 /* 모달 */
 .modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
-  background:rgba(30,33,38,.44);padding:16px}
+  background:rgba(17,18,20,.34);padding:16px}
 .modal.on{display:flex}
-.mbox{background:var(--surface);border-radius:15px;padding:16px;width:100%;max-width:360px;max-height:92dvh;
-  overflow:auto;box-shadow:0 18px 50px rgba(0,0,0,.3)}
-.mbox h3{margin:0 0 6px;font-size:14px;font-weight:800}
-.mbox p.d{margin:0 0 12px;font-size:11.5px;color:var(--fg3)}
-.cropwrap{position:relative;width:100%;aspect-ratio:1;background:#e6e4df;border-radius:12px;overflow:hidden;
-  touch-action:none;cursor:grab;margin-bottom:11px}
+.mbox{background:var(--paper);border-radius:var(--r);padding:18px;width:100%;max-width:352px;max-height:92dvh;
+  overflow:auto;box-shadow:0 20px 60px rgba(17,18,20,.22)}
+.mbox h3{margin:0 0 4px;font-size:13px;font-weight:700;letter-spacing:.02em}
+.mbox p.d{margin:0 0 14px;font-size:11px;color:var(--fg3)}
+.cropwrap{position:relative;width:100%;aspect-ratio:1;background:var(--ink-soft);overflow:hidden;
+  touch-action:none;cursor:grab;margin-bottom:12px}
 .cropwrap canvas{width:100%;height:100%;display:block}
-.cropwrap .mask{position:absolute;inset:0;pointer-events:none;border:1px dashed rgba(255,255,255,.8);
-  border-radius:50%;box-shadow:0 0 0 9999px rgba(30,33,38,.42)}
-.cropwrap .mask.sq{border-radius:12%}
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translate(-50%,22px);
-  z-index:300;background:#23262b;color:#fff;padding:9px 15px;border-radius:999px;font-size:12px;opacity:0;
-  transition:.2s;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.3);max-width:86vw;text-align:center}
+.cropwrap .mask{position:absolute;inset:0;pointer-events:none;border:1px solid rgba(255,255,255,.9);
+  border-radius:50%;box-shadow:0 0 0 9999px rgba(255,255,255,.62)}
+.cropwrap .mask.sq{border-radius:2px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translate(-50%,18px);
+  z-index:300;background:var(--ink);color:#fff;padding:9px 14px;border-radius:var(--r);font-size:11.5px;opacity:0;
+  transition:opacity .18s,transform .18s;pointer-events:none;max-width:86vw;text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-.busy{position:fixed;inset:0;z-index:250;display:none;place-items:center;background:rgba(233,231,226,.88);
-  font-size:12px;color:var(--fg2)}
+.busy{position:fixed;inset:0;z-index:250;display:none;place-items:center;background:rgba(255,255,255,.9);
+  font-size:11.5px;color:var(--fg2)}
 .busy.on{display:grid}
-.spin{width:24px;height:24px;border:2px solid #dcd9d3;border-top-color:var(--acc);border-radius:50%;
-  animation:sp .7s linear infinite;margin:0 auto 9px}
+.spin{width:18px;height:18px;border:1px solid var(--line2);border-top-color:var(--ink);border-radius:50%;
+  animation:sp .7s linear infinite;margin:0 auto 10px}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
@@ -295,38 +353,34 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
 
 /* 편집 상태 */
 .doc .b[contenteditable="true"]{outline:none}
-.doc .b.sel{box-shadow:0 0 0 1.5px var(--acc);border-radius:5px}
-.doc .b:hover:not(.sel){box-shadow:0 0 0 1px rgba(60,127,190,.28);border-radius:5px}
+.doc .b.sel{box-shadow:0 0 0 1px #111214;border-radius:2px}
+.doc .b:hover:not(.sel){box-shadow:0 0 0 1px rgba(17,18,20,.16);border-radius:2px}
 .doc.picking .b{cursor:pointer}
 .doc .b .cb{position:absolute;left:-1.35em;top:.1em;width:1.05em;height:1.05em;display:none;
-  border:1.5px solid var(--acc);border-radius:.22em;background:rgba(255,255,255,.85);z-index:5;font-size:.8em;
-  line-height:1;align-items:center;justify-content:center;color:var(--acc);font-weight:800}
+  border:1px solid #111214;border-radius:1px;background:rgba(255,255,255,.9);z-index:5;font-size:.8em;
+  line-height:1;align-items:center;justify-content:center;color:#111214;font-weight:700}
 .doc.picking .b .cb{display:flex}
 .doc .b.checked .cb::after{content:"✓"}
-.doc .b.checked{box-shadow:0 0 0 1.5px var(--danger);border-radius:5px}
-.doc.moving .b{cursor:grab;touch-action:none;box-shadow:0 0 0 1px rgba(60,127,190,.3);border-radius:5px}
+.doc .b.checked{box-shadow:0 0 0 1px #a3352a;border-radius:2px}
+.doc.moving .b{cursor:grab;touch-action:none;box-shadow:0 0 0 1px rgba(17,18,20,.2);border-radius:2px}
 .doc.moving .b.drag{opacity:.35}
 .card.export .b{box-shadow:none!important}
 .card.export .cb{display:none!important}
 
 /* 서명 · 페이지 번호 */
-.sign{position:relative;z-index:2;display:flex;gap:.5em;font-size:var(--sgsz);color:var(--sgc);
-  padding-top:var(--sggap);justify-content:var(--sgal)}
-.sign .pg{margin-left:auto}
-.sign.pgc{justify-content:center}
+.sign{position:relative;z-index:2;display:flex;align-items:baseline;gap:.55em;font-size:var(--sgsz);
+  color:var(--sgc);padding-top:var(--sggap);justify-content:var(--sgal);letter-spacing:.02em;
+  font-family:var(--ff)}
+.sign .sep{opacity:.6}
+.sign .pg{margin-left:.8em;opacity:.75}
 </style>
 </head>
 <body>
 <div id="app">
   <header class="topbar">
     <div class="logo">로그 발췌기</div>
-    <div class="modes" id="modes">
-      <button data-mode="normal">일반</button>
-      <button data-mode="log" class="on">로그</button>
-      <button data-mode="msg">메신저</button>
-    </div>
     <div class="topright">
-      <button class="btn sm" id="btnCopy">이미지 복사</button>
+      <button class="btn sm gho" id="btnCopy">복사</button>
       <button class="btn sm pri" id="btnSave">이미지 저장</button>
     </div>
   </header>
@@ -335,17 +389,17 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
     <div class="view">
       <div class="viewbar">
         <div class="zoom">
-          <button id="zOut" title="축소">−</button>
+          <button id="zOut">−</button>
           <span class="z" id="zVal">맞춤</span>
-          <button id="zIn" title="확대">＋</button>
-          <button id="zFit" title="화면에 맞춤" style="font-size:11px">맞춤</button>
+          <button id="zIn">＋</button>
+          <button id="zFit" class="zf">맞춤</button>
         </div>
-        <button class="btn sm gho" id="btnPick">☑ 여러 개 선택</button>
-        <button class="btn sm gho" id="btnMove">⇅ 순서 바꾸기</button>
+        <button class="vb" id="btnPick">선택 삭제</button>
+        <button class="vb" id="btnMove">순서</button>
         <div class="sp"></div>
-        <button class="btn sm gho" id="btnSplit">분할 저장</button>
-        <button class="btn sm gho" id="btnHtml">HTML</button>
-        <button class="btn sm del" id="btnClearAll">전부 지우기</button>
+        <button class="vb" id="btnSplit">분할 저장</button>
+        <button class="vb" id="btnHtml">HTML</button>
+        <button class="vb dg" id="btnClearAll">전부 지우기</button>
       </div>
       <div class="stage" id="stage">
         <div class="fitbox" id="fitbox">
@@ -359,43 +413,31 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
           </div>
         </div>
         <div class="meta">
-          <span>출력 <b id="mOut">—</b></span><span>·</span>
+          <span>출력 <b id="mOut">—</b></span>
           <span>블록 <b id="mCnt">0</b></span>
           <span class="w" id="mWarn"></span>
         </div>
-      </div>
-      <div class="selbar" id="selbar">
-        <span class="lbl" id="selLbl">블록</span>
-        <button class="fb" data-cmd="bold" style="font-weight:800">B</button>
-        <button class="fb" data-cmd="italic" style="font-style:italic">I</button>
-        <button class="fb" data-cmd="strikeThrough" style="text-decoration:line-through">S</button>
-        <button class="fb" data-cmd="underline" style="text-decoration:underline">U</button>
-        <button class="fb" data-ink="text" title="글자색"><span class="dot" id="dotText"></span></button>
-        <button class="fb" data-ink="sub" title="보조색"><span class="dot" id="dotSub"></span></button>
-        <button class="fb" data-hl="a" title="형광A"><span class="dot" id="dotHlA"></span></button>
-        <button class="fb" data-hl="b" title="형광B"><span class="dot" id="dotHlB"></span></button>
-        <button class="fb" data-hl="c" title="형광C"><span class="dot" id="dotHlC"></span></button>
-        <button class="fb" data-ul="a" title="강조선A">강A</button>
-        <button class="fb" data-ul="b" title="강조선B">강B</button>
-        <button class="fb" data-clear="1" title="서식 해제">✕</button>
-        <button class="fb" data-act="up" title="위로">↑</button>
-        <button class="fb" data-act="down" title="아래로">↓</button>
-        <button class="fb" data-act="dup" title="복제">⧉</button>
-        <button class="fb" data-act="split" title="여기서 페이지 나누기">✂</button>
-        <button class="fb" data-act="del" title="삭제" style="color:var(--danger)">⌫</button>
       </div>
     </div>
 
     <div class="resizer" id="resizer" title="편집바 폭 조절"></div>
 
     <aside class="panel" id="panel">
-      <div class="grip" id="grip"></div>
+      <div class="phead">
+        <div class="grip" id="grip"></div>
+        <div class="phrow">
+          <span class="t">편집</span>
+          <span class="sp"></span>
+          <button class="szb" id="szMin" title="접기">▁</button>
+          <button class="szb" id="szHalf" title="절반">▄</button>
+          <button class="szb" id="szMax" title="최대">█</button>
+        </div>
+      </div>
       <div class="pbody" id="pbody">
 
-        <!-- 작성 -->
-        <div class="composer">
-          <h4>메시지 작성 <span>Ctrl/⌘ + Enter로 추가</span></h4>
-          <div class="kind" id="kindSeg">
+        <!-- ===== 편집 ===== -->
+        <div class="edsec">
+          <div class="kindrow" id="kindRow">
             <button data-kind="text" class="on">글</button>
             <button data-kind="chat">말풍</button>
             <button data-kind="quote">인용</button>
@@ -404,8 +446,9 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
             <button data-kind="div">가름</button>
             <button data-kind="img">사진</button>
           </div>
-          <div id="cSender" class="row" style="display:none"><label>발신자</label><select id="senderSel"></select></div>
-          <div id="cTitleW" class="row" style="display:none"><label>굵기</label>
+
+          <div class="row" id="rSender" style="display:none"><label>발신자</label><select id="senderSel"></select></div>
+          <div class="row" id="rTw" style="display:none"><label>굵기</label>
             <div class="seg tight" style="flex:1 1 auto">
               <button class="btn sm" data-tw="400">보통</button>
               <button class="btn sm" data-tw="600">중간</button>
@@ -413,7 +456,7 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
               <button class="btn sm" data-tw="900">아주</button>
             </div>
           </div>
-          <div id="cAlign" class="row"><label>글 정렬</label>
+          <div class="row" id="rAlign"><label>정렬</label>
             <div class="seg tight" style="flex:1 1 auto">
               <button class="btn sm" data-balign="">기본</button>
               <button class="btn sm" data-balign="left">좌</button>
@@ -421,8 +464,9 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
               <button class="btn sm" data-balign="right">우</button>
             </div>
           </div>
-          <div id="cDiv" style="display:none">
-            <div class="row"><label>선 종류</label>
+
+          <div id="gDiv" style="display:none">
+            <div class="row"><label>선</label>
               <div class="seg tight" style="flex:1 1 auto">
                 <button class="btn sm" data-dvs="solid">실선</button>
                 <button class="btn sm" data-dvs="dashed">점선</button>
@@ -430,43 +474,104 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
               </div>
             </div>
             <div class="row"><label>길이</label><input type="range" id="dvLen" min="10" max="100" step="5"><span class="val" id="vDvLen"></span></div>
-            <div class="row"><label>위·아래 여백</label><input type="range" id="dvPad" min="0" max="60" step="1"><span class="val" id="vDvPad"></span></div>
+            <div class="row"><label>위·아래</label><input type="range" id="dvPad" min="0" max="60" step="1"><span class="val" id="vDvPad"></span></div>
           </div>
-          <div id="cImg" style="display:none">
+
+          <div id="gImg" style="display:none">
             <input type="file" id="imgFile" accept="image/*" hidden>
-            <div class="seg"><button class="btn sm" id="btnImgPick">이미지 고르기</button><button class="btn sm gho" id="btnImgCrop">자르기</button></div>
+            <div class="seg">
+              <button class="btn sm" id="btnImgPick">이미지 고르기</button>
+              <button class="btn sm gho" id="btnImgCrop">자르기</button>
+            </div>
             <div class="row" style="margin-top:8px"><label>크기</label><input type="range" id="imgW" min="20" max="100" step="5"><span class="val" id="vImgW"></span></div>
             <div class="row"><label>둥글기</label><input type="range" id="imgRad" min="0" max="40" step="2"><span class="val" id="vImgRad"></span></div>
+            <p class="hint">이미지를 고른 뒤 <b>＋ 추가</b>를 누르면 로그 안에 들어갑니다.</p>
           </div>
-          <textarea id="cText" placeholder="여기에 붙여넣거나 입력하세요.&#10;여러 줄을 넣으면 줄마다 블록으로 나뉩니다.&#10;&#10;*지문*  &quot;대사&quot;  이름: 대사"></textarea>
-          <div class="fmtbar" id="cFmt">
-            <button class="fb" data-ins="quote">""</button>
-            <button class="fb" data-ins="paren">( )</button>
-            <button class="fb" data-ins="star">*지문*</button>
-            <button class="fb" data-ins="clear">기호 지우기</button>
+
+          <div id="gText">
+            <div class="fmt" id="fmtBar">
+              <button class="fb" data-cmd="bold" style="font-weight:800">B</button>
+              <button class="fb" data-cmd="italic" style="font-style:italic">I</button>
+              <button class="fb" data-cmd="underline" style="text-decoration:underline">U</button>
+              <button class="fb" data-cmd="strikeThrough" style="text-decoration:line-through">S</button>
+              <span class="gap"></span>
+              <button class="fb" data-ink="text" title="글자색"><span class="dot" id="dotText"></span></button>
+              <button class="fb" data-ink="sub" title="보조색"><span class="dot" id="dotSub"></span></button>
+              <button class="fb" data-hl="a" title="형광 A"><span class="dot" id="dotHlA"></span></button>
+              <button class="fb" data-hl="b" title="형광 B"><span class="dot" id="dotHlB"></span></button>
+              <button class="fb" data-hl="c" title="형광 C"><span class="dot" id="dotHlC"></span></button>
+              <button class="fb" data-ul="a" title="강조선 A">강A</button>
+              <button class="fb" data-ul="b" title="강조선 B">강B</button>
+              <span class="gap"></span>
+              <button class="fb" data-ins="quote">""</button>
+              <button class="fb" data-ins="paren">( )</button>
+              <button class="fb" data-ins="star">＊＊</button>
+              <button class="fb" data-clear="1" title="서식 지우기">✕</button>
+            </div>
+            <div class="field" id="field" contenteditable="true" spellcheck="false"
+                 data-ph="여기에 붙여넣거나 입력하세요. 서식은 이 칸에서 바로 넣습니다."></div>
           </div>
-          <label class="chk"><input type="checkbox" id="optSplitLines" checked> 줄마다 블록으로 나누기</label>
-          <label class="chk"><input type="checkbox" id="optDetect" checked> <code>이름:</code> 을 발신자로 인식</label>
-          <div class="seg" style="margin-top:8px">
-            <button class="btn pri" id="btnAdd">＋ 블록 추가</button>
-            <button class="btn gho" id="btnAddClear">비우기</button>
+
+          <div class="fieldbar">
+            <button class="btn pri" id="btnAdd">＋ 추가</button>
+            <button class="btn" id="btnNew">새 블록</button>
           </div>
+          <div class="actrow">
+            <button class="fb" data-act="up" title="위로">↑</button>
+            <button class="fb" data-act="down" title="아래로">↓</button>
+            <button class="fb" data-act="dup" title="복제">⧉</button>
+            <button class="fb" data-act="split" title="페이지 나누기">✂</button>
+            <button class="fb" data-act="del" title="블록 삭제" style="color:var(--danger)">⌫</button>
+            <span class="sp" style="flex:1 1 auto"></span>
+            <label class="chk" style="min-height:26px"><input type="checkbox" id="optSplitLines" checked> 줄마다 나누기</label>
+          </div>
+          <div class="bound" id="boundInfo">새 블록 — 추가를 누르면 로그에 들어갑니다</div>
+        </div>
+
+        <!-- ===== 서명 (고정) ===== -->
+        <div class="signsec">
+          <div class="sub" style="margin-top:0">로그 아래 서명</div>
+          <div class="signrow">
+            <input type="text" id="sgL" placeholder="캐릭터명">
+            <select id="sgSep">
+              <option value="|">|</option>
+              <option value="·">·</option>
+              <option value="/">/</option>
+              <option value="—">—</option>
+              <option value="ㅣ">ㅣ</option>
+              <option value="•">•</option>
+              <option value="×">×</option>
+            </select>
+            <input type="text" id="sgR" placeholder="제작자명">
+          </div>
+          <div class="row" style="margin-top:9px"><label>정렬</label>
+            <div class="seg tight" style="flex:1 1 auto">
+              <button class="btn sm" data-sgal="flex-start">좌</button>
+              <button class="btn sm" data-sgal="center">중</button>
+              <button class="btn sm" data-sgal="flex-end">우</button>
+            </div>
+          </div>
+          <div class="row"><label>크기</label><input type="range" id="sgSz" min="7" max="20" step="0.5"><span class="val" id="vSgSz"></span></div>
+          <div class="row"><label>위 간격</label><input type="range" id="sgGap" min="0" max="60" step="1"><span class="val" id="vSgGap"></span></div>
+          <div class="row"><label>색</label><input type="color" id="sgC"><span class="val" id="vSgC"></span></div>
+          <label class="chk"><input type="checkbox" id="pgOn"> 분할 저장 시 페이지 번호 넣기</label>
         </div>
 
         <div class="tools">
-          <h4>도구 — 필요한 것만 열어두세요</h4>
+          <h4>도구</h4>
 
-          <!-- 인물 -->
           <div class="acc" data-acc="people">
-            <button class="h"><span class="ic">👥</span>인물 <span id="pCnt" style="margin-left:4px;color:var(--fg3);font-weight:500"></span></button>
+            <button class="h"><span class="ic">◉</span>인물 <span id="pCnt" style="margin-left:5px;color:var(--fg3);font-weight:400;font-size:11px"></span></button>
             <div class="b">
-              <div class="sub">등록된 인물</div>
               <div class="people" id="pList"></div>
-              <div class="seg"><button class="btn sm" id="btnPNew">+ 새 인물</button><button class="btn sm" id="btnPApply">선택 블록에 적용</button></div>
+              <div class="seg">
+                <button class="btn sm" id="btnPNew">+ 새 인물</button>
+                <button class="btn sm" id="btnPApply">이 블록에 적용</button>
+              </div>
               <div class="box" id="pEdit" style="display:none">
-                <h5 id="pEditT">인물 편집</h5>
+                <h5 id="pEditT">인물</h5>
                 <div class="row"><label>이름</label><input type="text" id="pName" maxlength="24"></div>
-                <div class="row"><label>별명</label><input type="text" id="pAlias" placeholder="쉼표로 구분 · 이 이름도 같이 인식"></div>
+                <div class="row"><label>별명</label><input type="text" id="pAlias" placeholder="쉼표로 구분"></div>
                 <div class="row"><label>기본 위치</label>
                   <div class="seg tight" style="flex:1 1 auto">
                     <button class="btn sm" data-pside="left">왼쪽</button>
@@ -487,20 +592,18 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
                   <button class="btn gho" id="btnPClose">닫기</button>
                 </div>
               </div>
-              <div class="sub">한 번에 정리</div>
+              <div class="sub">한 번에</div>
               <div class="seg">
-                <button class="btn sm" id="btnAutoBubble">⚡ 자동 말풍선</button>
-                <button class="btn sm" id="btnAutoLine">⚡ 자동 강조선</button>
+                <button class="btn sm" id="btnAutoBubble">대사 → 말풍선</button>
+                <button class="btn sm" id="btnAutoLine">대사 → 강조선</button>
               </div>
-              <p class="hint">자동 말풍선은 <code>"대사"</code> 가 있는 글 블록을 말풍선으로 바꿉니다. 자동 강조선은 대사에 강조선A를 넣습니다.</p>
             </div>
           </div>
 
-          <!-- 캔버스 -->
           <div class="acc" data-acc="canvas">
-            <button class="h"><span class="ic">▣</span>캔버스 · 여백</button>
+            <button class="h"><span class="ic">▢</span>캔버스 · 여백</button>
             <div class="b">
-              <div class="sub">캔버스 비율</div>
+              <div class="sub">비율</div>
               <div class="seg tight">
                 <button class="btn sm" data-ratio="auto">자동</button>
                 <button class="btn sm" data-ratio="1:1">1:1</button>
@@ -509,32 +612,31 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
                 <button class="btn sm" data-ratio="16:9">16:9</button>
                 <button class="btn sm" data-ratio="9:16">9:16</button>
               </div>
-              <div class="sub">너비 · 여백</div>
+              <div class="sub">크기</div>
               <div class="row"><label>전체 너비</label><input type="range" id="cw" min="320" max="1400" step="10"><span class="val" id="vCw"></span></div>
               <div class="row"><label>가로 여백</label><input type="range" id="padX" min="0" max="200" step="2"><span class="val" id="vPadX"></span></div>
               <div class="row"><label>세로 여백</label><input type="range" id="padY" min="0" max="240" step="2"><span class="val" id="vPadY"></span></div>
-              <label class="chk"><input type="checkbox" id="padLink"> 가로 · 세로 여백 함께 움직이기</label>
-              <div class="sub">열 레이아웃</div>
+              <label class="chk"><input type="checkbox" id="padLink"> 가로·세로 함께</label>
+              <div class="sub">단</div>
               <div class="seg tight">
-                <button class="btn sm" data-cols="1">일반 (1열)</button>
-                <button class="btn sm" data-cols="2">책 내지 (2열)</button>
+                <button class="btn sm" data-cols="1">1열</button>
+                <button class="btn sm" data-cols="2">2열 (내지)</button>
               </div>
               <div class="row" style="margin-top:8px"><label>단 간격</label><input type="range" id="cgap" min="16" max="140" step="4"><span class="val" id="vCgap"></span></div>
             </div>
           </div>
 
-          <!-- 배경 -->
           <div class="acc" data-acc="bg">
-            <button class="h"><span class="ic">◐</span>테마 · 배경</button>
+            <button class="h"><span class="ic">◐</span>배경</button>
             <div class="b">
-              <div class="sub">배경 타입</div>
+              <div class="sub">타입</div>
               <div class="seg tight">
                 <button class="btn sm" data-bgt="solid">단색</button>
                 <button class="btn sm" data-bgt="g2">2색</button>
                 <button class="btn sm" data-bgt="g3">3색</button>
                 <button class="btn sm" data-bgt="img">이미지</button>
               </div>
-              <div class="seg tight" style="margin-top:7px">
+              <div class="seg tight" style="margin-top:6px">
                 <button class="btn sm" data-bgp="white">흰</button>
                 <button class="btn sm" data-bgp="paper">종이</button>
                 <button class="btn sm" data-bgp="ink">먹</button>
@@ -551,29 +653,28 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
                   <button class="btn sm" data-bgdir="45">↗</button>
                 </div>
               </div>
-              <div class="sub">배경 이미지</div>
+              <div class="sub">이미지</div>
               <input type="file" id="bgFile" accept="image/*" hidden>
               <div class="seg"><button class="btn sm" id="btnBgPick">불러오기</button><button class="btn sm gho" id="btnBgClr">지우기</button></div>
               <div class="row" style="margin-top:8px"><label>크기</label><input type="range" id="bgSize" min="60" max="260" step="5"><span class="val" id="vBgSize"></span></div>
-              <div class="row"><label>가로 위치</label><input type="range" id="bgX" min="0" max="100" step="1"><span class="val" id="vBgX"></span></div>
-              <div class="row"><label>세로 위치</label><input type="range" id="bgY" min="0" max="100" step="1"><span class="val" id="vBgY"></span></div>
+              <div class="row"><label>가로</label><input type="range" id="bgX" min="0" max="100" step="1"><span class="val" id="vBgX"></span></div>
+              <div class="row"><label>세로</label><input type="range" id="bgY" min="0" max="100" step="1"><span class="val" id="vBgY"></span></div>
               <div class="row"><label>블러</label><input type="range" id="bgBlur" min="0" max="24" step="1"><span class="val" id="vBgBlur"></span></div>
-              <div class="row"><label>오버레이</label><input type="color" id="ovC"><input type="range" id="ovA" min="0" max="90" step="1"><span class="val" id="vOvA"></span></div>
+              <div class="row"><label>덮개</label><input type="color" id="ovC"><input type="range" id="ovA" min="0" max="90" step="1"><span class="val" id="vOvA"></span></div>
             </div>
           </div>
 
-          <!-- 타이포 -->
           <div class="acc" data-acc="type">
-            <button class="h"><span class="ic">가</span>텍스트 · 간격</button>
+            <button class="h"><span class="ic">A</span>글꼴 · 간격</button>
             <div class="b">
               <div class="sub">서체</div>
               <select id="font">
-                <option value="sans">고딕 (시스템)</option>
+                <option value="sans">고딕</option>
                 <option value="serif">명조</option>
                 <option value="round">둥근 고딕</option>
                 <option value="mono">등폭</option>
               </select>
-              <div class="row" style="margin-top:8px"><label>본문 굵기</label>
+              <div class="row" style="margin-top:8px"><label>굵기</label>
                 <div class="seg tight" style="flex:1 1 auto">
                   <button class="btn sm" data-fw="300">얇게</button>
                   <button class="btn sm" data-fw="400">보통</button>
@@ -591,11 +692,11 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
               </div>
               <div class="row"><label>줄바꿈</label>
                 <div class="seg tight" style="flex:1 1 auto">
-                  <button class="btn sm" data-wrap="word">단어 단위</button>
-                  <button class="btn sm" data-wrap="char">글자 단위</button>
+                  <button class="btn sm" data-wrap="word">단어</button>
+                  <button class="btn sm" data-wrap="char">글자</button>
                 </div>
               </div>
-              <div class="sub">본문 간격</div>
+              <div class="sub">본문</div>
               <div class="row"><label>크기</label><input type="range" id="fs" min="9" max="40" step="0.5"><span class="val" id="vFs"></span></div>
               <div class="row"><label>자간</label><input type="range" id="ls" min="-2" max="6" step="0.1"><span class="val" id="vLs"></span></div>
               <div class="row"><label>행간</label><input type="range" id="lh" min="1" max="3" step="0.02"><span class="val" id="vLh"></span></div>
@@ -609,9 +710,8 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
             </div>
           </div>
 
-          <!-- 말풍선 -->
           <div class="acc" data-acc="bubble">
-            <button class="h"><span class="ic">▰</span>말풍선</button>
+            <button class="h"><span class="ic">▭</span>말풍선</button>
             <div class="b">
               <div class="sub">테마</div>
               <div class="seg tight">
@@ -621,9 +721,9 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
               </div>
               <div class="row" style="margin-top:8px"><label>테두리</label><input type="color" id="btc"><input type="range" id="btw" min="0" max="4" step="0.5"><span class="val" id="vBtw"></span></div>
               <div class="sub">표시</div>
-              <label class="chk"><input type="checkbox" id="bShowAv"> 프로필 사진</label>
+              <label class="chk"><input type="checkbox" id="bShowAv"> 프사</label>
               <label class="chk"><input type="checkbox" id="bShowNm"> 이름</label>
-              <label class="chk"><input type="checkbox" id="bTail"> 말풍선 꼬리</label>
+              <label class="chk"><input type="checkbox" id="bTail"> 꼬리</label>
               <label class="chk"><input type="checkbox" id="bGroup"> 연달아 말하면 묶기</label>
               <label class="chk"><input type="checkbox" id="bQuote"> 대사에 따옴표 남기기</label>
               <div class="row" style="margin-top:6px"><label>프사 모양</label>
@@ -632,7 +732,7 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
                   <button class="btn sm" data-avsh="sq">라운드</button>
                 </div>
               </div>
-              <div class="sub">모양 · 간격</div>
+              <div class="sub">모양</div>
               <div class="row"><label>프사 크기</label><input type="range" id="avSz" min="14" max="80" step="1"><span class="val" id="vAvSz"></span></div>
               <div class="row"><label>글자 크기</label><input type="range" id="bsz" min="9" max="34" step="0.5"><span class="val" id="vBsz"></span></div>
               <div class="row"><label>행간</label><input type="range" id="blh" min="1" max="2.6" step="0.02"><span class="val" id="vBlh"></span></div>
@@ -640,16 +740,15 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
               <div class="row"><label>안쪽 ↔</label><input type="range" id="bph" min="0" max="30" step="1"><span class="val" id="vBph"></span></div>
               <div class="row"><label>둥글기</label><input type="range" id="brad" min="0" max="30" step="1"><span class="val" id="vBrad"></span></div>
               <div class="row"><label>최대 폭</label><input type="range" id="bmax" min="50" max="100" step="2"><span class="val" id="vBmax"></span></div>
-              <div class="row"><label>말풍선 간격</label><input type="range" id="bgap" min="0" max="40" step="1"><span class="val" id="vBgap"></span></div>
+              <div class="row"><label>간격</label><input type="range" id="bgap" min="0" max="40" step="1"><span class="val" id="vBgap"></span></div>
               <div class="row"><label>이름 크기</label><input type="range" id="nsz" min="7" max="24" step="0.5"><span class="val" id="vNsz"></span></div>
             </div>
           </div>
 
-          <!-- 색 · 효과 -->
           <div class="acc" data-acc="color">
-            <button class="h"><span class="ic">✦</span>색 · 효과</button>
+            <button class="h"><span class="ic">◍</span>색 · 효과</button>
             <div class="b">
-              <div class="sub">글자 · 강조</div>
+              <div class="sub">글자</div>
               <div class="row"><label>글자색</label><input type="color" id="cText2"><span class="val" id="vCText2"></span></div>
               <div class="row"><label>보조색</label><input type="color" id="cSub"></div>
               <div class="row"><label>강조선A</label><input type="color" id="cLineA"></div>
@@ -657,27 +756,26 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
               <div class="row"><label>형광 A</label><input type="color" id="cHlA"></div>
               <div class="row"><label>형광 B</label><input type="color" id="cHlB"></div>
               <div class="row"><label>형광 C</label><input type="color" id="cHlC"></div>
-              <div class="sub">스마트 하이라이트</div>
-              <label class="chk"><input type="checkbox" id="smQ"> <b>따옴표 감지</b> — <code>"대사"</code></label>
+              <div class="sub">자동 감지</div>
+              <label class="chk"><input type="checkbox" id="smQ"> 따옴표 <code>"대사"</code></label>
               <div class="row"><label>따옴표 A</label><input type="color" id="cQA"></div>
               <div class="row"><label>따옴표 B</label><input type="color" id="cQB"><span class="val">「」</span></div>
-              <label class="chk"><input type="checkbox" id="smP"> <b>괄호 감지</b> — <code>*지문*</code> <code>( )</code></label>
+              <label class="chk"><input type="checkbox" id="smP"> 괄호 <code>*지문*</code> <code>( )</code></label>
               <div class="row"><label>괄호색</label><input type="color" id="cPr"></div>
-              <label class="chk"><input type="checkbox" id="smStrip"> 기호를 결과물에서 숨기기</label>
+              <label class="chk"><input type="checkbox" id="smStrip"> 기호 숨기기 (원문은 보존)</label>
               <div class="sub">그림자</div>
               <label class="chk"><input type="checkbox" id="shOn"> 글자 그림자</label>
               <div class="row"><label>색</label><input type="color" id="shC"></div>
               <div class="row"><label>번짐</label><input type="range" id="shBlur" min="0" max="16" step="0.5"><span class="val" id="vShBlur"></span></div>
-              <div class="row"><label>세로 위치</label><input type="range" id="shY" min="-6" max="10" step="0.5"><span class="val" id="vShY"></span></div>
+              <div class="row"><label>세로</label><input type="range" id="shY" min="-6" max="10" step="0.5"><span class="val" id="vShY"></span></div>
               <label class="chk"><input type="checkbox" id="bShadow"> 말풍선 그림자</label>
             </div>
           </div>
 
-          <!-- 저장 -->
           <div class="acc" data-acc="out">
-            <button class="h"><span class="ic">↓</span>저장 · 서명 · 프리셋</button>
+            <button class="h"><span class="ic">↧</span>저장 · 프리셋</button>
             <div class="b">
-              <div class="sub">저장 옵션</div>
+              <div class="sub">저장</div>
               <div class="row"><label>파일 이름</label><input type="text" id="fname" placeholder="excerpt"></div>
               <div class="row"><label>배율</label>
                 <div class="seg tight" style="flex:1 1 auto">
@@ -693,36 +791,21 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
                   <button class="btn sm" data-fmt="jpg">JPG</button>
                 </div>
               </div>
-              <label class="chk"><input type="checkbox" id="outTr"> 배경 투명하게 (PNG)</label>
-              <div class="sub">서명</div>
-              <label class="chk"><input type="checkbox" id="sgOn"> 서명 표시</label>
-              <div class="row"><label>왼쪽</label><input type="text" id="sgL" placeholder="캐릭터 이름"></div>
-              <div class="row"><label>오른쪽</label><input type="text" id="sgR" placeholder="제작자"></div>
-              <div class="row"><label>정렬</label>
-                <div class="seg tight" style="flex:1 1 auto">
-                  <button class="btn sm" data-sgal="flex-start">좌</button>
-                  <button class="btn sm" data-sgal="center">중</button>
-                  <button class="btn sm" data-sgal="flex-end">우</button>
-                </div>
-              </div>
-              <div class="row"><label>크기</label><input type="range" id="sgSz" min="7" max="20" step="0.5"><span class="val" id="vSgSz"></span></div>
-              <div class="row"><label>위 간격</label><input type="range" id="sgGap" min="0" max="60" step="1"><span class="val" id="vSgGap"></span></div>
-              <div class="row"><label>색</label><input type="color" id="sgC"></div>
-              <label class="chk"><input type="checkbox" id="pgOn"> 페이지 번호 (분할 저장 시)</label>
-              <div class="sub">디자인 프리셋</div>
-              <div class="row"><input type="text" id="presetName" placeholder="프리셋 이름"><button class="btn sm" id="btnPreSave">저장</button></div>
+              <label class="chk"><input type="checkbox" id="outTr"> 배경 투명 (PNG)</label>
+              <div class="sub">프리셋</div>
+              <div class="row"><input type="text" id="presetName" placeholder="이름"><button class="btn sm" id="btnPreSave">저장</button></div>
               <div class="row"><select id="presetList"></select>
                 <button class="btn sm" id="btnPreLoad">적용</button>
                 <button class="btn sm del" id="btnPreDel">삭제</button>
               </div>
-              <div class="sub">백업 · 초기화</div>
+              <div class="sub">백업</div>
               <input type="file" id="impFile" accept="application/json,.json" hidden>
               <div class="seg">
-                <button class="btn sm" id="btnExp">JSON 내보내기</button>
+                <button class="btn sm" id="btnExp">JSON 저장</button>
                 <button class="btn sm" id="btnImp">가져오기</button>
-                <button class="btn sm del" id="btnReset">기본값</button>
+                <button class="btn sm del" id="btnReset">초기화</button>
               </div>
-              <p class="hint" id="autoStat">본문과 설정은 자동 저장됩니다.</p>
+              <p class="hint" id="autoStat">자동 저장됩니다.</p>
             </div>
           </div>
         </div>
@@ -734,14 +817,14 @@ input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
 <div class="modal" id="cropModal">
   <div class="mbox">
     <h3>이미지 자르기</h3>
-    <p class="d">드래그로 위치, 슬라이더로 크기를 맞춰요</p>
+    <p class="d">드래그로 위치, 슬라이더로 크기</p>
     <div class="cropwrap" id="cropWrap">
       <canvas id="cropCv" width="512" height="512"></canvas>
       <div class="mask" id="cropMask"></div>
     </div>
     <div class="row"><label>크기</label><input type="range" id="cropZoom" min="1" max="4" step="0.02"></div>
     <div class="seg" style="margin-top:10px">
-      <button class="btn pri" id="cropOk">이걸로 사용</button>
+      <button class="btn pri" id="cropOk">사용</button>
       <button class="btn gho" id="cropNo">취소</button>
     </div>
   </div>
@@ -792,7 +875,7 @@ const BGP={
 const PAL=['#23262b','#4a5058','#8b9098','#ffffff','#b03a2e','#c1662f','#c9a227','#3c7a55','#2f6493','#54499b','#96417c','#7a5c3e'];
 function defState(){
   return {
-    mode:'log', blocks:[], people:[], activeP:null, zoom:0, sel:-1, panelW:352, sheetH:54,
+    blocks:[], people:[], activeP:null, zoom:0, sel:-1, panelW:360, sheet:'half',
     canvas:{ratio:'auto', w:600, padX:44, padY:56, cols:1, cgap:56, padLink:false},
     bg:{type:'solid',a:'#f5f1e8',b:'#e8e2d3',c:'#d9d3c4',dir:180,img:null,imgRaw:null,size:100,x:50,y:50,blur:0,ovC:'#000000',ovA:0},
     type:{font:'sans',fw:400,ta:'left',wrap:'word',fs:13,ls:0,lh:1.85,para:13,sx:100,
@@ -804,7 +887,7 @@ function defState(){
            shOn:false,shC:'#000000',shBlur:3,shY:1},
     smart:{q:true,p:true,strip:true},
     out:{scale:2,fmt:'png',name:'excerpt',transparent:false},
-    sign:{on:false,l:'',r:'',al:'space-between',sz:10,gap:16,c:'#9aa0a8',pg:false},
+    sign:{l:'',r:'',sep:'|',al:'center',sz:10,gap:18,c:'#9a9c9f',pg:false},
     ui:{kind:'text',align:'',tw:'700',dvs:'solid',dvLen:100,dvPad:10,img:null,imgW:80,imgRad:8,
         acc:{people:true,canvas:false,bg:false,type:false,bubble:false,color:false,out:false}}
   };
@@ -961,14 +1044,15 @@ function render(){
     if(S.bub.tail&&!next&&S.bub.theme==='basic') el.classList.add('tailon');
   });
   if(S.sel>=0){ const e=$('.b[data-i="'+S.sel+'"]',doc); if(e) e.classList.add('sel'); }
-  const sg=$('#sign');
-  if(S.sign.on&&(S.sign.l||S.sign.r||S.sign.pg)){
+  const sg=$('#sign'), sl=(S.sign.l||'').trim(), sr=(S.sign.r||'').trim();
+  const pgtxt=(S.sign.pg&&pageOnly>=0)?((pageOnly+1)+' / '+pages().length):'';
+  if(sl||sr||pgtxt){
     sg.style.display='flex';
-    sg.className='sign'+(S.sign.al==='center'?' pgc':'');
-    sg.style.justifyContent=S.sign.al==='center'?'center':(S.sign.al==='flex-end'?'flex-end':'space-between');
-    sg.innerHTML=(S.sign.l?'<span>'+esc(S.sign.l)+'</span>':'')+
-      (S.sign.r?'<span>'+esc(S.sign.r)+'</span>':'')+
-      (S.sign.pg&&pageOnly>=0?'<span class="pg">'+(pageOnly+1)+' / '+pages().length+'</span>':'');
+    sg.style.justifyContent=S.sign.al;
+    sg.innerHTML=(sl?'<span>'+esc(sl)+'</span>':'')+
+      ((sl&&sr)?'<span class="sep">'+esc(S.sign.sep||'|')+'</span>':'')+
+      (sr?'<span>'+esc(sr)+'</span>':'')+
+      (pgtxt?'<span class="pg">'+esc(pgtxt)+'</span>':'');
   } else sg.style.display='none';
   $('#mCnt').textContent=S.blocks.length;
   fit();
@@ -980,7 +1064,7 @@ function blockEl(b,i){
   el.insertAdjacentHTML('afterbegin','<span class="cb" contenteditable="false"></span>');
   const ed=(html)=>{
     const d=document.createElement('div');
-    d.className='ed'; d.setAttribute('contenteditable','true'); d.spellcheck=false;
+    d.className='ed'; d.setAttribute('contenteditable','false');
     d.style.outline='none'; d.innerHTML=smartHTML(html)||'<br>';
     if(S.type.sx!==100){ d.style.display='inline-block'; d.style.transform='scaleX('+(S.type.sx/100)+')';
       d.style.transformOrigin=(S.type.ta==='center'?'center':(S.type.ta==='right'?'right':'left'))+' center'; }
@@ -1052,90 +1136,153 @@ window.addEventListener('orientationchange',()=>setTimeout(fit,250));
 if(window.ResizeObserver) new ResizeObserver(debounce(fit,40)).observe(card);
 let exporting=false;
 
-/* ===================== 선택 · 인라인 편집 ===================== */
-let savedR=null, pickMode=false, moveMode=false;
+
+/* ===================== 공통 헬퍼 ===================== */
+function seg(attr,val,root){
+  $$('['+attr+']',root||document).forEach(b=>b.classList.toggle('on',b.getAttribute(attr)===String(val)));
+}
+function findPerson(name){
+  const n=String(name).trim().toLowerCase();
+  return S.people.find(p=>p.name.trim().toLowerCase()===n||
+    (p.alias||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean).indexOf(n)>=0)||null;
+}
+function newPerson(name){
+  const i=S.people.length;
+  const pre=[{b:'#f0f0ef',t:'#111214',s:'left'},{b:'#111214',t:'#ffffff',s:'right'}][i%2];
+  const p={id:uid(),name:name||('인물 '+(i+1)),alias:'',side:pre.s,
+    nameColor:'#5e6165',bubble:pre.b,textColor:pre.t,quoteColor:'',avatar:null};
+  S.people.push(p); if(!S.activeP) S.activeP=p.id;
+  renderPeople(); return p;
+}
+
+/* ===================== 입력칸 = 편집기 ===================== */
+const field=$('#field');
+let cur=-1;                 // 입력칸에 연결된 블록 (-1 = 새 블록)
+let pickMode=false, moveMode=false, savedR=null;
+const KIND_NAME={text:'글',chat:'말풍선',quote:'인용',title:'제목',sub:'부제',div:'가름선',img:'사진',page:'페이지'};
+
 document.addEventListener('selectionchange',()=>{
   const s=window.getSelection();
-  if(s&&s.rangeCount&&doc.contains(s.anchorNode)) savedR=s.getRangeAt(0).cloneRange();
+  if(s&&s.rangeCount&&field.contains(s.anchorNode)) savedR=s.getRangeAt(0).cloneRange();
 });
-function edOf(i){ const e=$('.b[data-i="'+i+'"] .ed',doc); return e; }
 function blkElOf(n){ while(n&&n!==doc){ if(n.nodeType===1&&n.classList&&n.classList.contains('b')) return n; n=n.parentNode; } return null; }
-function selectBlock(i,focus){
-  S.sel=i;
-  $$('.b',doc).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i));
+function bindTo(i){
+  flushLive();
+  cur=i;
   const b=S.blocks[i];
-  $('#selbar').classList.toggle('on',i>=0&&!pickMode&&!moveMode);
-  if(b) $('#selLbl').textContent={text:'글',chat:'말풍선',quote:'인용',title:'제목',sub:'부제',div:'가름선',img:'사진',page:'페이지'}[b.kind]||'블록';
-  if(focus){ const e=edOf(i); if(e){ e.focus(); } }
+  S.sel=i;
+  if(b){
+    S.ui.kind=b.kind==='page'?'text':b.kind;
+    if(b.align!==undefined) S.ui.align=b.align||'';
+    if(b.w) S.ui.tw=b.w;
+    field.innerHTML=(b.kind==='div'||b.kind==='img'||b.kind==='page')?'':(b.html||'');
+    if(b.kind==='chat'&&b.sender) { S.activeP=b.sender; const s=$('#senderSel'); if(s) s.value=b.sender; }
+  }
+  syncEd(); render();
 }
-stage.addEventListener('pointerdown',e=>{
-  if(blkElOf(e.target)) return;
-  if(pickMode||moveMode) return;
-  selectBlock(-1,false);
+function unbind(clear){
+  flushLive();
+  cur=-1; S.sel=-1;
+  if(clear!==false) field.innerHTML='';
+  syncEd(); render();
+}
+function syncEd(){
+  seg('data-kind',S.ui.kind,$('#kindRow'));
+  const k=S.ui.kind;
+  $('#rSender').style.display=k==='chat'?'flex':'none';
+  $('#rTw').style.display=(k==='title'||k==='sub')?'flex':'none';
+  $('#rAlign').style.display=(k==='div'||k==='chat')?'none':'flex';
+  $('#gDiv').style.display=k==='div'?'block':'none';
+  $('#gImg').style.display=k==='img'?'block':'none';
+  $('#gText').style.display=(k==='div'||k==='img')?'none':'block';
+  seg('data-balign',S.ui.align); seg('data-tw',S.ui.tw); seg('data-dvs',S.ui.dvs);
+  const b=S.blocks[cur];
+  $('#btnAdd').textContent=b?'＋ 다음 블록':'＋ 추가';
+  $('#btnNew').textContent=b?'선택 해제':'비우기';
+  $('#boundInfo').innerHTML=b
+    ? '<b>'+(cur+1)+'번째 '+(KIND_NAME[b.kind]||'블록')+'</b> 을 고치고 있습니다 — 바뀐 내용은 바로 반영됩니다'
+    : '새 블록 — <b>＋ 추가</b>를 누르면 로그에 들어갑니다';
+  $$('.b',doc).forEach(e=>e.classList.toggle('sel',+e.dataset.i===cur));
+}
+/* 입력칸 → 블록 실시간 반영 */
+let liveT=null;
+function pushLiveNow(){
+  clearTimeout(liveT); liveT=null;
+  const b=S.blocks[cur]; if(!b) return;
+  if(b.kind==='div'||b.kind==='img'||b.kind==='page') return;
+  b.html=cleanField();
+  detectSender(b);
+  render(); save();
+}
+function pushLive(){ clearTimeout(liveT); liveT=setTimeout(pushLiveNow,200); }
+function flushLive(){ if(liveT) pushLiveNow(); }
+function detectSender(b,create){
+  if(b.kind!=='chat') return;
+  const d=document.createElement('div'); d.innerHTML=b.html;
+  const m=d.textContent.match(/^([^:：]{1,16})\s*[:：]\s*(.+)$/);
+  if(!m) return;
+  const p=findPerson(m[1])||(create?newPerson(m[1].trim()):null); if(!p) return;
+  b.sender=p.id; b.side=p.side;
+  b.html=b.html.replace(/^([^:：]{1,16})\s*[:：]\s*/,'');
+  field.innerHTML=b.html;
+}
+function cleanField(){
+  const d=document.createElement('div'); d.innerHTML=field.innerHTML;
+  $$('div,p',d).forEach(x=>{ x.insertAdjacentHTML('afterend','<br>'); const p=x.parentNode;
+    while(x.firstChild) p.insertBefore(x.firstChild,x); x.remove(); });
+  return unsmart(d.innerHTML).replace(/(<br>\s*)+$/,'');
+}
+field.addEventListener('input',()=>{ if(cur>=0) pushLive(); });
+field.addEventListener('blur',()=>{
+  flushLive();
+  const b=S.blocks[cur];
+  if(b&&b.kind==='chat'){ detectSender(b,true); render(); save(); }
 });
+field.addEventListener('focus',()=>{
+  if(isNarrow()) setTimeout(()=>{ try{ field.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} },320);
+});
+field.addEventListener('paste',e=>{
+  const cd=e.clipboardData; if(!cd) return;
+  const t=cd.getData('text/plain'); if(t==null) return;
+  e.preventDefault();
+  document.execCommand('insertHTML',false,esc(t).replace(/\n/g,'<br>'));
+  if(cur>=0) pushLive();
+});
+/* 미리보기에서 블록 고르기 */
 doc.addEventListener('pointerdown',e=>{
   const el=blkElOf(e.target); if(!el) return;
   const i=+el.dataset.i;
   if(pickMode){ e.preventDefault(); el.classList.toggle('checked'); return; }
   if(moveMode) return;
-  selectBlock(i,false);
+  bindTo(i);
+  if(isNarrow()&&$('#panel').classList.contains('min')) setSheet('half');
 });
-doc.addEventListener('focusin',e=>{
-  const el=blkElOf(e.target); if(el) selectBlock(+el.dataset.i,false);
+stage.addEventListener('pointerdown',e=>{
+  if(blkElOf(e.target)||pickMode||moveMode) return;
+  if(cur>=0) unbind(false);
 });
-doc.addEventListener('input',e=>{
-  const el=blkElOf(e.target); if(!el) return;
-  const i=+el.dataset.i, b=S.blocks[i]; if(!b) return;
-  const ed=el.querySelector('.ed'); if(!ed) return;
-  b.html=unsmart(ed.innerHTML);
-  save(); fit();
-});
-doc.addEventListener('focusout',e=>{
-  const el=blkElOf(e.target); if(!el) return;
-  const ed=el.querySelector('.ed'); if(!ed) return;
-  const i=+el.dataset.i, b=S.blocks[i]; if(!b) return;
-  b.html=unsmart(ed.innerHTML);
-  ed.innerHTML=smartHTML(b.html)||'<br>';
-  save();
-});
-doc.addEventListener('keydown',e=>{
-  if(e.key!=='Enter'||e.shiftKey) return;
-  const el=blkElOf(e.target); if(!el) return;
-  const i=+el.dataset.i, b=S.blocks[i]; if(!b) return;
-  e.preventDefault();
-  const nb={id:uid(),kind:b.kind,html:'<br>',align:b.align,w:b.w,sender:b.sender,side:b.side};
-  S.blocks.splice(i+1,0,nb);
-  render(); selectBlock(i+1,true); save();
-});
-/* 인라인 명령 */
+/* 서식 */
 try{ document.execCommand('styleWithCSS',false,true); }catch(e){}
 function withSel(fn){
-  if(S.sel<0){ toast('먼저 결과물에서 블록을 누르세요'); return; }
-  const ed=edOf(S.sel); if(!ed){ toast('이 블록은 글자 서식을 넣을 수 없습니다'); return; }
-  ed.focus();
+  field.focus();
   const s=window.getSelection();
-  if(savedR&&ed.contains(savedR.commonAncestorContainer)){ s.removeAllRanges(); s.addRange(savedR); }
-  if(!s.rangeCount) return;
-  fn(s,s.getRangeAt(0),ed);
-  $$('i[data-mk] span,i[data-mk] b,i[data-mk] u,i[data-mk] s,i[data-mk] i',ed).forEach(x=>{
-    const p=x.parentNode; while(x.firstChild) p.insertBefore(x.firstChild,x); x.remove(); p.normalize();
-  });
-  const i=S.sel, b=S.blocks[i];
-  if(b){ b.html=unsmart(ed.innerHTML); }
-  savedR=(s.rangeCount?s.getRangeAt(0).cloneRange():null);
-  save(); fit();
+  if(savedR&&field.contains(savedR.commonAncestorContainer)){ s.removeAllRanges(); s.addRange(savedR); }
+  if(!s.rangeCount){ toast('입력칸에서 글자를 선택하세요'); return; }
+  fn(s,s.getRangeAt(0));
+  savedR=s.rangeCount?s.getRangeAt(0).cloneRange():null;
+  if(cur>=0){ const b=S.blocks[cur]; b.html=cleanField(); render(); save(); }
 }
-function cmd(name,val){ withSel(()=>{ try{ document.execCommand('styleWithCSS',false,true); }catch(e){} try{ document.execCommand(name,false,val); }catch(e){} }); }
-function needSel(r){ if(r.collapsed){ toast('먼저 글자를 드래그해 선택하세요'); return false; } return true; }
-function wrapInline(cls,styleFn){
+function cmd(n,v){ withSel(()=>{ try{ document.execCommand('styleWithCSS',false,true); }catch(e){} try{ document.execCommand(n,false,v); }catch(e){} }); }
+function wrapInline(cls){
   withSel((s,r)=>{
-    if(!needSel(r)) return;
-    const already=(()=>{ let n=r.startContainer; while(n&&n!==doc){ if(n.nodeType===1&&n.classList&&cls.split(' ').every(c=>n.classList.contains(c))) return n; n=n.parentNode; } return null; })();
-    if(already&&already.textContent===r.toString()){
-      const p=already.parentNode; while(already.firstChild) p.insertBefore(already.firstChild,already);
-      already.remove(); p.normalize(); return;
+    if(r.collapsed){ toast('먼저 글자를 선택하세요'); return; }
+    let n=r.startContainer, hit=null;
+    while(n&&n!==field){ if(n.nodeType===1&&n.classList&&cls.split(' ').every(c=>n.classList.contains(c))){ hit=n; break; } n=n.parentNode; }
+    if(hit&&hit.textContent===r.toString()){
+      const p=hit.parentNode; while(hit.firstChild) p.insertBefore(hit.firstChild,hit);
+      hit.remove(); p.normalize(); return;
     }
-    const sp=document.createElement('span'); sp.className=cls; if(styleFn) styleFn(sp);
+    const sp=document.createElement('span'); sp.className=cls;
     const c=r.extractContents();
     $$('span.hl,span.ul-a,span.ul-b',c).forEach(x=>{ const p=x.parentNode; while(x.firstChild) p.insertBefore(x.firstChild,x); x.remove(); });
     sp.appendChild(c); r.insertNode(sp);
@@ -1144,15 +1291,22 @@ function wrapInline(cls,styleFn){
 }
 function clearInline(){
   withSel((s,r)=>{
-    if(!needSel(r)) return;
-    const frag=r.extractContents();
-    const d=document.createElement('div'); d.appendChild(frag);
-    const txt=d.textContent;
-    const tn=document.createTextNode(txt); r.insertNode(tn);
+    if(r.collapsed){ toast('먼저 글자를 선택하세요'); return; }
+    const d=document.createElement('div'); d.appendChild(r.extractContents());
+    const tn=document.createTextNode(d.textContent); r.insertNode(tn);
     const nr=document.createRange(); nr.selectNode(tn); s.removeAllRanges(); s.addRange(nr);
   });
 }
-$$('#selbar .fb').forEach(btn=>{
+function insertMark(kind){
+  const wrap={quote:['"','"'],paren:['(',')'],star:['*','*']}[kind];
+  withSel((s,r)=>{
+    const txt=r.toString();
+    if(txt){ const t=document.createTextNode(wrap[0]+txt+wrap[1]); r.deleteContents(); r.insertNode(t);
+      const nr=document.createRange(); nr.setStart(t,1); nr.setEnd(t,1+txt.length); s.removeAllRanges(); s.addRange(nr); }
+    else { document.execCommand('insertText',false,wrap[0]+wrap[1]); }
+  });
+}
+$$('#fmtBar .fb').forEach(btn=>{
   btn.addEventListener('pointerdown',e=>e.preventDefault());
   btn.addEventListener('click',()=>{
     const d=btn.dataset;
@@ -1160,42 +1314,123 @@ $$('#selbar .fb').forEach(btn=>{
     else if(d.ink) cmd('foreColor',d.ink==='sub'?S.color.sub:S.color.text);
     else if(d.hl) wrapInline('hl hl-'+d.hl);
     else if(d.ul) wrapInline('ul-'+d.ul);
+    else if(d.ins) insertMark(d.ins);
     else if(d.clear) clearInline();
-    else if(d.act) blockAct(d.act);
   });
 });
-function blockAct(a){
-  const i=S.sel; if(i<0) return;
-  if(a==='up'&&i>0){ const t=S.blocks[i-1]; S.blocks[i-1]=S.blocks[i]; S.blocks[i]=t; render(); selectBlock(i-1); }
-  else if(a==='down'&&i<S.blocks.length-1){ const t=S.blocks[i+1]; S.blocks[i+1]=S.blocks[i]; S.blocks[i]=t; render(); selectBlock(i+1); }
-  else if(a==='dup'){ const c=JSON.parse(JSON.stringify(S.blocks[i])); c.id=uid(); S.blocks.splice(i+1,0,c); render(); selectBlock(i+1); }
-  else if(a==='split'){ S.blocks.splice(i+1,0,{id:uid(),kind:'page',html:''}); render(); selectBlock(-1); }
-  else if(a==='del'){ S.blocks.splice(i,1); render(); selectBlock(Math.min(i,S.blocks.length-1)); }
+/* 종류 · 정렬 · 굵기 */
+$$('#kindRow button').forEach(b=>b.addEventListener('click',()=>{
+  flushLive();
+  S.ui.kind=b.dataset.kind;
+  const blk=S.blocks[cur];
+  if(blk){
+    blk.kind=S.ui.kind;
+    if(S.ui.kind==='chat'){
+      if(!blk.sender){ const p=personOf(S.activeP)||S.people[0]||newPerson(); blk.sender=p.id; blk.side=p.side; }
+      const probe=document.createElement('div'); probe.innerHTML=blk.html;
+      const m=probe.textContent.match(/^([^:：]{1,16})\s*[:：]\s*(.+)$/);
+      if(m){ const p2=findPerson(m[1])||newPerson(m[1].trim()); blk.sender=p2.id; blk.side=p2.side;
+        blk.html=blk.html.replace(/^([^:：]{1,16})\s*[:：]\s*/,''); field.innerHTML=blk.html; }
+    }
+    if((S.ui.kind==='title'||S.ui.kind==='sub')&&!blk.w) blk.w=S.ui.tw;
+    if(S.ui.kind==='div'){ blk.dvs=S.ui.dvs; blk.len=S.ui.dvLen; blk.pad=S.ui.dvPad; }
+    if(S.ui.kind==='img'&&!blk.src){ blk.src=S.ui.img||''; blk.w=S.ui.imgW; blk.rad=S.ui.imgRad; }
+    save();
+  }
+  syncEd(); render();
+}));
+function applyToCur(fn){ const b=S.blocks[cur]; if(b){ fn(b); render(); save(); } }
+$$('[data-balign]').forEach(b=>b.addEventListener('click',()=>{
+  S.ui.align=b.dataset.balign; seg('data-balign',S.ui.align);
+  applyToCur(x=>x.align=S.ui.align); save();
+}));
+$$('[data-tw]').forEach(b=>b.addEventListener('click',()=>{
+  S.ui.tw=b.dataset.tw; seg('data-tw',S.ui.tw); applyToCur(x=>x.w=S.ui.tw); save();
+}));
+$$('[data-dvs]').forEach(b=>b.addEventListener('click',()=>{
+  S.ui.dvs=b.dataset.dvs; seg('data-dvs',S.ui.dvs); applyToCur(x=>{ if(x.kind==='div') x.dvs=S.ui.dvs; }); save();
+}));
+/* 추가 · 새 블록 */
+$('#btnAdd').addEventListener('click',()=>{
+  flushLive();
+  const k=S.ui.kind;
+  if(cur>=0){                      // 이미 연결됨 → 다음 빈 블록
+    const nb={id:uid(),kind:k,html:''};
+    if(S.ui.align) nb.align=S.ui.align;
+    if(k==='title'||k==='sub') nb.w=S.ui.tw;
+    if(k==='chat'){ const p=personOf(S.activeP)||S.people[0]||newPerson(); nb.sender=p.id; nb.side=p.side; }
+    if(k==='div'){ nb.dvs=S.ui.dvs; nb.len=S.ui.dvLen; nb.pad=S.ui.dvPad; }
+    if(k==='img'){ nb.src=S.ui.img||''; nb.w=S.ui.imgW; nb.rad=S.ui.imgRad; }
+    S.blocks.splice(cur+1,0,nb); bindTo(cur+1); save(); return;
+  }
+  const at=S.blocks.length, out=[];
+  if(k==='div') out.push({id:uid(),kind:'div',html:'',dvs:S.ui.dvs,len:S.ui.dvLen,pad:S.ui.dvPad});
+  else if(k==='img'){
+    if(!S.ui.img){ toast('먼저 이미지를 고르세요'); return; }
+    out.push({id:uid(),kind:'img',html:'',src:S.ui.img,w:S.ui.imgW,rad:S.ui.imgRad});
+  }else{
+    const src=cleanField();
+    if(!field.textContent.trim()){ toast('내용을 입력하세요'); return; }
+    const chunks=$('#optSplitLines').checked?src.split(/<br\s*\/?>/i):[src];
+    chunks.forEach(h=>{
+      const probe=document.createElement('div'); probe.innerHTML=h;
+      const txt=probe.textContent.trim(); if(!txt) return;
+      let kind=k,sender=null,side=null,html=h;
+      if(k==='chat'){
+        const m=txt.match(/^([^:：]{1,16})\s*[:：]\s*(.+)$/);
+        if(m){
+          const p=findPerson(m[1])||newPerson(m[1].trim());
+          sender=p.id; side=p.side;
+          html=h.replace(/^([^:：]{1,16})\s*[:：]\s*/,'');
+        }else{ const p=personOf($('#senderSel').value)||personOf(S.activeP)||S.people[0]||newPerson(); sender=p.id; side=p.side; }
+      }
+      const b={id:uid(),kind:kind,html:html};
+      if(S.ui.align) b.align=S.ui.align;
+      if(kind==='title'||kind==='sub') b.w=S.ui.tw;
+      if(kind==='chat'){ b.sender=sender; b.side=side; }
+      out.push(b);
+    });
+    if(!out.length){ toast('추가할 내용이 없습니다'); return; }
+  }
+  S.blocks.splice(at,0,...out);
+  bindTo(at+out.length-1);   // 마지막 블록에 연결 → 입력칸의 글은 그대로 남습니다
   save();
-}
-/* 여러 개 선택 · 순서 바꾸기 */
+});
+$('#btnNew').addEventListener('click',()=>unbind(true));
+/* 블록 조작 */
+$$('.actrow .fb').forEach(btn=>btn.addEventListener('click',()=>{
+  flushLive();
+  const a=btn.dataset.act, i=cur;
+  if(i<0){ toast('먼저 미리보기에서 블록을 누르세요'); return; }
+  if(a==='up'&&i>0){ const t=S.blocks[i-1]; S.blocks[i-1]=S.blocks[i]; S.blocks[i]=t; bindTo(i-1); }
+  else if(a==='down'&&i<S.blocks.length-1){ const t=S.blocks[i+1]; S.blocks[i+1]=S.blocks[i]; S.blocks[i]=t; bindTo(i+1); }
+  else if(a==='dup'){ const c=JSON.parse(JSON.stringify(S.blocks[i])); c.id=uid(); S.blocks.splice(i+1,0,c); bindTo(i+1); }
+  else if(a==='split'){ S.blocks.splice(i+1,0,{id:uid(),kind:'page',html:''}); render(); }
+  else if(a==='del'){ S.blocks.splice(i,1); unbind(true); }
+  save();
+}));
+/* 선택 삭제 · 순서 */
 $('#btnPick').addEventListener('click',()=>{
-  pickMode=!pickMode; if(pickMode) moveMode=false;
-  syncModes();
-  if(!pickMode){
+  pickMode=!pickMode; if(pickMode){ moveMode=false; unbind(false); }
+  else{
     const on=$$('.b.checked',doc);
     if(on.length&&confirm(on.length+'개 블록을 삭제할까요?')){
-      const ids=on.map(e=>S.blocks[+e.dataset.i]);
-      S.blocks=S.blocks.filter(b=>ids.indexOf(b)<0);
-      selectBlock(-1); save();
+      const del=on.map(e=>S.blocks[+e.dataset.i]);
+      S.blocks=S.blocks.filter(b=>del.indexOf(b)<0); save();
     }
-    render();
   }
+  syncModes(); render();
 });
-$('#btnMove').addEventListener('click',()=>{ moveMode=!moveMode; if(moveMode) pickMode=false; syncModes(); });
+$('#btnMove').addEventListener('click',()=>{
+  moveMode=!moveMode; if(moveMode){ pickMode=false; unbind(false); }
+  syncModes(); render();
+});
 function syncModes(){
   doc.classList.toggle('picking',pickMode);
   doc.classList.toggle('moving',moveMode);
   $('#btnPick').classList.toggle('on',pickMode);
-  $('#btnPick').textContent=pickMode?'☑ 선택 삭제 완료':'☑ 여러 개 선택';
+  $('#btnPick').textContent=pickMode?'삭제 실행':'선택 삭제';
   $('#btnMove').classList.toggle('on',moveMode);
-  $$('.b .ed',doc).forEach(e=>e.setAttribute('contenteditable',(pickMode||moveMode)?'false':'true'));
-  $('#selbar').classList.toggle('on',S.sel>=0&&!pickMode&&!moveMode);
   $$('.b.checked',doc).forEach(e=>e.classList.remove('checked'));
 }
 (function(){
@@ -1209,19 +1444,18 @@ function syncModes(){
   });
   doc.addEventListener('pointermove',e=>{
     if(!dr) return;
-    const t=document.elementFromPoint(e.clientX,e.clientY), over=blkElOf(t);
+    const over=blkElOf(document.elementFromPoint(e.clientX,e.clientY));
     if(!over||over===dr) return;
     moved=true;
     const r=over.getBoundingClientRect();
-    const before=e.clientY<r.top+r.height/2;
-    over.parentNode.insertBefore(dr,before?over:over.nextSibling);
+    over.parentNode.insertBefore(dr,(e.clientY<r.top+r.height/2)?over:over.nextSibling);
   });
   const end=()=>{
     if(!dr) return;
     dr.classList.remove('drag');
     if(moved){
       const order=$$('.b',doc).map(e=>S.blocks[+e.dataset.i]).filter(Boolean);
-      if(order.length===S.blocks.length){ S.blocks=order; }
+      if(order.length===S.blocks.length) S.blocks=order;
       render(); save();
     }
     dr=null;
@@ -1229,88 +1463,6 @@ function syncModes(){
   ['pointerup','pointercancel'].forEach(ev=>doc.addEventListener(ev,end));
   window.addEventListener('pointerup',end);
 })();
-
-/* ===================== 작성 카드 ===================== */
-function seg(attr,val,root){ $$('['+attr+']',root||$('#panel')).forEach(b=>b.classList.toggle('on',b.getAttribute(attr)===String(val))); }
-$$('#kindSeg button').forEach(b=>b.addEventListener('click',()=>{
-  S.ui.kind=b.dataset.kind; syncComposer(); save();
-}));
-function syncComposer(){
-  seg('data-kind',S.ui.kind,$('#kindSeg'));
-  const k=S.ui.kind;
-  $('#cSender').style.display=k==='chat'?'flex':'none';
-  $('#cTitleW').style.display=(k==='title'||k==='sub')?'flex':'none';
-  $('#cDiv').style.display=k==='div'?'block':'none';
-  $('#cImg').style.display=k==='img'?'block':'none';
-  $('#cText').style.display=(k==='div'||k==='img')?'none':'block';
-  $('#cFmt').style.display=(k==='div'||k==='img')?'none':'flex';
-  $('#cAlign').style.display=(k==='div'||k==='chat')?'none':'flex';
-  seg('data-balign',S.ui.align); seg('data-tw',S.ui.tw); seg('data-dvs',S.ui.dvs);
-  $('#btnAdd').textContent=k==='div'?'＋ 가름선 추가':(k==='img'?'＋ 사진 추가':'＋ 블록 추가');
-}
-$$('[data-balign]').forEach(b=>b.addEventListener('click',()=>{ S.ui.align=b.dataset.balign; seg('data-balign',S.ui.align); save(); }));
-$$('[data-tw]').forEach(b=>b.addEventListener('click',()=>{ S.ui.tw=b.dataset.tw; seg('data-tw',S.ui.tw); save(); }));
-$$('[data-dvs]').forEach(b=>b.addEventListener('click',()=>{ S.ui.dvs=b.dataset.dvs; seg('data-dvs',S.ui.dvs); save(); }));
-$$('#cFmt .fb').forEach(b=>b.addEventListener('click',()=>{
-  const ta=$('#cText'), s=ta.selectionStart, e=ta.selectionEnd, v=ta.value;
-  const mid=v.slice(s,e), pre=v.slice(0,s), post=v.slice(e);
-  const t=b.dataset.ins;
-  if(t==='clear'){ ta.value=v.replace(/[*"\u201C\u201D\u300C\u300D\u300E\u300F()]/g,''); return; }
-  const wrap={quote:['"','"'],paren:['(',')'],star:['*','*']}[t];
-  ta.value=pre+wrap[0]+(mid||'')+wrap[1]+post;
-  ta.focus(); ta.selectionStart=s+1; ta.selectionEnd=s+1+(mid?mid.length:0);
-}));
-function findPerson(name){
-  const n=String(name).trim().toLowerCase();
-  return S.people.find(p=>p.name.trim().toLowerCase()===n||
-    (p.alias||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean).indexOf(n)>=0)||null;
-}
-function newPerson(name){
-  const i=S.people.length;
-  const pre=[{b:'#ececef',t:'#23262b',s:'left'},{b:'#3c7fbe',t:'#ffffff',s:'right'}][i%2];
-  const p={id:uid(),name:name||('인물 '+(i+1)),alias:'',side:S.mode==='msg'&&i===0?'right':pre.s,
-    nameColor:'#6b7078',bubble:pre.b,textColor:pre.t,quoteColor:'',avatar:null};
-  S.people.push(p); if(!S.activeP) S.activeP=p.id;
-  renderPeople(); return p;
-}
-$('#btnAdd').addEventListener('click',addBlocks);
-$('#cText').addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){ e.preventDefault(); addBlocks(); } });
-$('#btnAddClear').addEventListener('click',()=>{ $('#cText').value=''; save(); });
-function addBlocks(){
-  const k=S.ui.kind, at=(S.sel>=0?S.sel+1:S.blocks.length);
-  const out=[];
-  if(k==='div'){ out.push({id:uid(),kind:'div',html:'',dvs:S.ui.dvs,len:S.ui.dvLen,pad:S.ui.dvPad}); }
-  else if(k==='img'){
-    if(!S.ui.img){ toast('먼저 이미지를 고르세요'); return; }
-    out.push({id:uid(),kind:'img',html:'',src:S.ui.img,w:S.ui.imgW,rad:S.ui.imgRad});
-  }else{
-    const raw=$('#cText').value;
-    if(!raw.trim()){ toast('내용을 입력하세요'); return; }
-    const lines=$('#optSplitLines').checked?raw.replace(/\r\n?/g,'\n').split('\n'):[raw];
-    lines.forEach(line=>{
-      const t=line.trim(); if(!t) return;
-      let kind=k, sender=null, side=null, body=t;
-      if((k==='chat')&&$('#optDetect').checked){
-        const m=t.match(/^([^:：]{1,16})\s*[:：]\s*(.+)$/);
-        if(m){ const p=findPerson(m[1])||newPerson(m[1].trim()); sender=p.id; side=p.side; body=m[2]; }
-      }
-      if(kind==='chat'&&!sender){
-        const p=personOf($('#senderSel').value)||personOf(S.activeP)||S.people[0]||newPerson();
-        sender=p.id; side=p.side;
-      }
-      const b={id:uid(),kind:kind,html:esc(body)};
-      if(S.ui.align) b.align=S.ui.align;
-      if(kind==='title'||kind==='sub') b.w=S.ui.tw;
-      if(kind==='chat'){ b.sender=sender; b.side=side; }
-      out.push(b);
-    });
-    if(!out.length){ toast('추가할 내용이 없습니다'); return; }
-    $('#cText').value='';
-  }
-  S.blocks.splice(at,0,...out);
-  render(); selectBlock(at+out.length-1); save();
-  toast(out.length+'개 블록을 추가했습니다');
-}
 /* 자동 정리 */
 $('#btnAutoBubble').addEventListener('click',()=>{
   let n=0;
@@ -1321,28 +1473,82 @@ $('#btnAutoBubble').addEventListener('click',()=>{
     const m=txt.match(/^([^:：]{1,16})\s*[:：]\s*(.+)$/);
     if(m){
       const p=findPerson(m[1])||newPerson(m[1].trim());
-      b.kind='chat'; b.sender=p.id; b.side=p.side; b.html=esc(m[2]); n++; return;
+      b.kind='chat'; b.sender=p.id; b.side=p.side;
+      b.html=b.html.replace(/^([^:：]{1,16})\s*[:：]\s*/,''); n++; return;
     }
     if(/["\u201C\u300C]/.test(txt)){
       const p=personOf(S.activeP)||S.people[0]||newPerson();
       b.kind='chat'; b.sender=p.id; b.side=p.side; n++;
     }
   });
-  render(); save(); toast(n?n+'개를 말풍선으로 바꿨습니다':'바꿀 대사를 찾지 못했습니다');
+  unbind(true); render(); save();
+  toast(n?n+'개를 말풍선으로 바꿨습니다':'바꿀 대사를 찾지 못했습니다');
 });
 $('#btnAutoLine').addEventListener('click',()=>{
   let n=0;
   S.blocks.forEach(b=>{
     if(b.kind!=='text'&&b.kind!=='quote') return;
     const d=document.createElement('div'); d.innerHTML=unsmart(b.html);
-    const t=d.textContent;
-    const r=/"([^"\n]*)"|\u201C([^\u201D\n]*)\u201D/g;
+    const t=d.textContent, r=/"([^"\n]*)"|\u201C([^\u201D\n]*)\u201D/g;
     if(!r.test(t)) return;
-    r.lastIndex=0;
-    b.html=t.replace(r,(full,a,c)=>{ n++; return '<span class="ul-a">'+esc(full)+'</span>'; });
+    b.html=t.replace(/"([^"\n]*)"|\u201C([^\u201D\n]*)\u201D/g,f=>{ n++; return '<span class="ul-a">'+esc(f)+'</span>'; });
   });
-  render(); save(); toast(n?n+'곳에 강조선을 넣었습니다':'대사를 찾지 못했습니다');
+  unbind(true); render(); save();
+  toast(n?n+'곳에 강조선을 넣었습니다':'대사를 찾지 못했습니다');
 });
+/* ===================== 시트 크기 · 키보드 ===================== */
+function kbPx(){
+  const v=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kb'));
+  return isNaN(v)?0:v;
+}
+function sheetMax(){ return Math.max(160,window.innerHeight-46-kbPx()-6); }
+function setSheet(mode){
+  const p=$('#panel');
+  S.sheet=mode; p.classList.remove('min');
+  if(mode==='min'){ p.classList.add('min'); }
+  else if(mode==='half'){ document.documentElement.style.setProperty('--sheetH','56vh'); }
+  else { document.documentElement.style.setProperty('--sheetH',(sheetMax()-6)+'px'); }
+  ['min','half','max'].forEach(m=>$('#sz'+m.charAt(0).toUpperCase()+m.slice(1)).classList.toggle('on',m===mode));
+  fit(); save();
+}
+$('#szMin').addEventListener('click',()=>setSheet('min'));
+$('#szHalf').addEventListener('click',()=>setSheet('half'));
+$('#szMax').addEventListener('click',()=>setSheet('max'));
+(function(){
+  const g=$('#grip'), p=$('#panel'); let drag=false,sy=0,h0=0,dy=0;
+  g.addEventListener('pointerdown',e=>{ drag=true; dy=0; sy=e.clientY; h0=p.offsetHeight; g.classList.add('on');
+    try{ g.setPointerCapture(e.pointerId); }catch(err){} });
+  g.addEventListener('pointermove',e=>{
+    if(!drag) return; dy=e.clientY-sy;
+    const h=clamp(h0-dy,62,sheetMax()-6);
+    p.classList.remove('min');
+    document.documentElement.style.setProperty('--sheetH',h+'px'); fit();
+  });
+  ['pointerup','pointercancel'].forEach(ev=>g.addEventListener(ev,()=>{
+    if(!drag) return; drag=false; g.classList.remove('on');
+    if(Math.abs(dy)<6){ setSheet(p.offsetHeight<100?'half':'min'); return; }
+    const h=p.offsetHeight;
+    S.sheet=h>=sheetMax()-40?'max':(h<110?'min':'half');
+    ['min','half','max'].forEach(m=>$('#sz'+m.charAt(0).toUpperCase()+m.slice(1)).classList.toggle('on',m===S.sheet));
+    if(S.sheet==='min') setSheet('min');
+    save();
+  }));
+})();
+if(window.visualViewport){
+  const vv=window.visualViewport;
+  const onVV=()=>{
+    const kb=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
+    document.documentElement.style.setProperty('--kb',kb+'px');
+    document.documentElement.style.setProperty('--kbon',kb>60?1:0);
+    if(kb>60&&isNarrow()){
+      $('#panel').classList.remove('min');
+      const h=Math.min(parseFloat(getComputedStyle($('#panel')).height),vv.height-52);
+      document.documentElement.style.setProperty('--sheetH',Math.max(180,h)+'px');
+    }
+    fit();
+  };
+  vv.addEventListener('resize',onVV); vv.addEventListener('scroll',onVV);
+}
 
 /* ===================== 인물 ===================== */
 let pEdit=null;
@@ -1570,8 +1776,8 @@ bindR('shBlur',()=>S.color.shBlur,v=>S.color.shBlur=v,px);
 bindR('shY',()=>S.color.shY,v=>S.color.shY=v,px);
 bindK('outTr',()=>S.out.transparent,v=>S.out.transparent=v);
 bindT('fname',()=>S.out.name,v=>S.out.name=v);
-bindK('sgOn',()=>S.sign.on,v=>S.sign.on=v);
 bindT('sgL',()=>S.sign.l,v=>S.sign.l=v);
+bindT('sgSep',()=>S.sign.sep,v=>S.sign.sep=v);
 bindT('sgR',()=>S.sign.r,v=>S.sign.r=v);
 bindR('sgSz',()=>S.sign.sz,v=>S.sign.sz=v,px);
 bindR('sgGap',()=>S.sign.gap,v=>S.sign.gap=v,px);
@@ -1630,14 +1836,6 @@ function rebuildBg(){
   im.onerror=()=>{ S.bg.img=S.bg.imgRaw; render(); save(); };
   im.src=S.bg.imgRaw;
 }
-/* 모드 */
-$$('#modes button').forEach(b=>b.addEventListener('click',()=>{
-  S.mode=b.dataset.mode; seg('data-mode',S.mode,$('#modes'));
-  if(S.mode==='msg'){ S.bub.showNm=false; S.bub.group=true; S.ui.kind='chat'; }
-  else if(S.mode==='log'){ S.bub.showNm=true; S.ui.kind='text'; }
-  else { S.ui.kind='text'; }
-  syncAll(); syncComposer(); render(); save();
-}));
 /* 아코디언 */
 $$('.acc').forEach(a=>{
   const k=a.dataset.acc;
@@ -1678,6 +1876,7 @@ function curScale(){ return Math.min(1,(stage.clientWidth-28)/S.canvas.w); }
 
 /* ===================== 내보내기 ===================== */
 async function renderCanvas(){
+  if(typeof flushLive==='function') flushLive();
   exporting=true; applyVars();
   const wasSel=S.sel; S.sel=-1;
   $$('.b',doc).forEach(e=>e.classList.remove('sel'));
@@ -1711,22 +1910,24 @@ async function saveImage(){
   busy(true,'이미지를 만들고 있습니다…');
   try{
     const cv=await renderCanvas();
+    if(!cv||!cv.width||!cv.height) throw new Error('빈 이미지');
     const png=S.out.fmt!=='jpg';
-    dl(cv.toDataURL(png?'image/png':'image/jpeg',png?undefined:.96),fileName());
-    toast(cv.width+'×'+cv.height+' 저장했습니다');
-  }catch(e){ console.error(e); toast('저장 실패: '+(e&&e.message||e)); }
+    const url=cv.toDataURL(png?'image/png':'image/jpeg',png?undefined:.96);
+    if(!url||url.length<200) throw new Error('데이터 생성 실패');
+    dl(url,fileName());
+  }catch(e){ console.error(e); busy(false); alert('저장된 줄 알았지?ㅋ'); }
   finally{ busy(false); render(); }
 }
 $('#btnSave').addEventListener('click',saveImage);
 $('#btnCopy').addEventListener('click',async()=>{
-  if(!navigator.clipboard||!window.ClipboardItem){ toast('이 브라우저는 이미지 복사를 지원하지 않습니다'); return; }
+  if(!navigator.clipboard||!window.ClipboardItem){ alert('저장된 줄 알았지?ㅋ'); return; }
   busy(true,'복사할 이미지를 만들고 있습니다…');
   try{
     const cv=await renderCanvas();
     const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
     await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
-    toast('클립보드에 복사했습니다');
-  }catch(e){ console.error(e); toast('복사 실패: '+(e&&e.message||e)); }
+    toast('복사했습니다');
+  }catch(e){ console.error(e); busy(false); alert('저장된 줄 알았지?ㅋ'); }
   finally{ busy(false); render(); }
 });
 $('#btnSplit').addEventListener('click',async()=>{
@@ -1738,12 +1939,12 @@ $('#btnSplit').addEventListener('click',async()=>{
       pageOnly=i; render();
       await new Promise(r=>setTimeout(r,60));
       const cv=await renderCanvas();
+      if(!cv||!cv.width) throw new Error('빈 이미지');
       const png=S.out.fmt!=='jpg';
       dl(cv.toDataURL(png?'image/png':'image/jpeg',png?undefined:.96),fileName(i));
       await new Promise(r=>setTimeout(r,180));
     }
-    toast(ps.length+'장을 저장했습니다');
-  }catch(e){ console.error(e); toast('저장 실패: '+(e&&e.message||e)); }
+  }catch(e){ console.error(e); pageOnly=-1; busy(false); render(); alert('저장된 줄 알았지?ㅋ'); }
   finally{ pageOnly=-1; busy(false); render(); }
 });
 $('#btnHtml').addEventListener('click',()=>{
@@ -1850,13 +2051,12 @@ document.addEventListener('keydown',e=>{
 /* ===================== 동기화 · 시작 ===================== */
 function syncAll(){
   syncers.forEach(f=>f());
-  seg('data-mode',S.mode,$('#modes'));
   seg('data-ratio',S.canvas.ratio); seg('data-cols',S.canvas.cols);
   seg('data-bgt',S.bg.type); seg('data-bgdir',S.bg.dir);
   seg('data-fw',S.type.fw); seg('data-ta',S.type.ta); seg('data-wrap',S.type.wrap);
   seg('data-btheme',S.bub.theme); seg('data-avsh',S.bub.avsh);
   seg('data-scale',S.out.scale); seg('data-fmt',S.out.fmt); seg('data-sgal',S.sign.al);
-  syncBgRows(); syncComposer(); renderPeople();
+  syncBgRows(); syncEd(); renderPeople();
   ['dotText','dotSub','dotHlA','dotHlB','dotHlC'].forEach((id,i)=>{
     const c=[S.color.text,S.color.sub,S.color.hlA,S.color.hlB,S.color.hlC][i];
     const el=$('#'+id); if(el) el.style.background=c;
@@ -1865,11 +2065,15 @@ function syncAll(){
     const a=$('.acc[data-acc="'+k+'"]'); if(a) a.classList.toggle('open',!!S.ui.acc[k]);
   });
   if(S.panelW) document.documentElement.style.setProperty('--panelW',S.panelW+'px');
-  if(S.sheetH) document.documentElement.style.setProperty('--sheetH',S.sheetH+'vh');
+  ['min','half','max'].forEach(m=>{
+    const b=$('#sz'+m.charAt(0).toUpperCase()+m.slice(1)); if(b) b.classList.toggle('on',m===(S.sheet||'half'));
+  });
+  $('#panel').classList.toggle('min',S.sheet==='min');
 }
 function init(){
   load();
   renderPresets(); syncAll(); render();
+  if(S.sheet==='max'&&isNarrow()) setSheet('max');
   if(S.bg.imgRaw&&!S.bg.img) rebuildBg();
   setTimeout(fit,120);
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fit);
