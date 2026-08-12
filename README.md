@@ -3,9 +3,6 @@
 로그를 블록 단위로 쌓아 발췌 이미지를 만드는 단일 페이지 웹앱입니다.
 `index.html` 하나만 GitHub Pages에 올리면 동작합니다.
 
-편집 UI는 [채팅 발췌기](https://mok0999.github.io/315/chat.html), 결과물 구조는
-[52발췌기](https://mudoc087-rgb.github.io/quote-studio/)를 참고해 재구성했습니다.
-
 ## 배포
 
 1. 저장소 루트에 `index.html` 업로드
